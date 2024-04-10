@@ -1,0 +1,30 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "Launch Client",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}"
+			],
+			"outFiles": [
+				"${workspaceRoot}/client/out/**/*.js",
+				"${workspaceRoot}/server/out/**/*.js"
+			],
+			"autoAttachChildProcesses": true,
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"type": "node-terminal",
+			"name": "Run Script: postinstall",
+			"request": "launch",
+			"command": "npm run postinstall",
+			"cwd": "${workspaceFolder}"
+		}
+	]
+}
