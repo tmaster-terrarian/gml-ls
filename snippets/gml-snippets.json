@@ -1,0 +1,16 @@
+{
+    "Quick struct accessor": {
+		"prefix": "..",
+		"body": [
+			"[$ $0]"
+		]
+	},
+	"jsdoc": {
+        "prefix": "jsdoc",
+        "body": [
+			"/// @description $0",
+			"/// @param ${2:param0} $3"
+        ],
+        "description": "JSDoc structure"
+    }
+}

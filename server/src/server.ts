@@ -14,7 +14,7 @@ import {
     InitializeResult
 } from 'vscode-languageserver/node';
 
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Position, TextDocument } from 'vscode-languageserver-textdocument';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -75,6 +75,18 @@ connection.onInitialized(() => {
             connection.console.log('Workspace folder change event received.');
         });
     }
+});
+
+connection.onDidOpenTextDocument((params) => {
+    // A text document was opened in VS Code.
+    // params.uri uniquely identifies the document. For documents stored on disk, this is a file URI.
+    // params.text the initial full content of the document.
+});
+
+connection.onDidChangeTextDocument((params) => {
+    // The content of a text document has change in VS Code.
+    // params.uri uniquely identifies the document.
+    // params.contentChanges describe the content changes to the document.
 });
 
 // The example settings
@@ -143,21 +155,24 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
     // The validator creates diagnostics for all uppercase words length 2 and more
     let text = textDocument.getText();
-    let pattern = /\b[A-Z]{2,}\b/g;
+    let pattern = /(?<=\#macro)[ ]\b[a-zA-Z_][a-zA-Z_0-9]*\b/g;
     let m: RegExpExecArray | null;
+    let pattern2 = /[a-z]/g;
+    let n: RegExpExecArray | null;
 
     let problems = 0;
     let diagnostics: Diagnostic[] = [];
-    while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
+    while ((m = pattern.exec(text)) && (n = pattern2.exec(m[0])) && problems < settings.maxNumberOfProblems) {
         problems++;
         let diagnostic: Diagnostic = {
             severity: DiagnosticSeverity.Warning,
             range: {
-                start: textDocument.positionAt(m.index),
-                end: textDocument.positionAt(m.index + m[0].length)
+                start: textDocument.positionAt(m.index + 1),
+                end: textDocument.positionAt(m.index + 1)
             },
-            message: `${m[0]} is all uppercase.`,
-            source: 'ex'
+            message: `${m[0]} is not all uppercase`,
+            source: 'gml',
+            code: "macro.nameCollisionWarning"
         };
         if (hasDiagnosticRelatedInformationCapability)
         {
@@ -167,14 +182,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                         uri: textDocument.uri,
                         range: Object.assign({}, diagnostic.range)
                     },
-                    message: 'Spelling matters'
-                },
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: 'Particularly for names'
+                    message: `name collision is more likely to occur`
                 }
             ]
         }
@@ -198,14 +206,14 @@ connection.onCompletion(
         // info and always provide the same completion items.
         return [
             {
-                label: 'TypeScript',
-                kind: CompletionItemKind.Text,
-                data: 1
+                label: 'global',
+                data: "global",
+                kind: CompletionItemKind.Module
             },
             {
-                label: 'JavaScript',
-                kind: CompletionItemKind.Text,
-                data: 2
+                label: '#macro',
+                data: "macro",
+                kind: CompletionItemKind.Constant
             }
         ];
     }
@@ -215,15 +223,19 @@ connection.onCompletion(
 // the completion list.
 connection.onCompletionResolve(
     (item: CompletionItem): CompletionItem => {
-        if (item.data === 1)
+        switch (item.data)
         {
-            item.detail = 'TypeScript details';
-            item.documentation = 'TypeScript documentation';
-        }
-        else if(item.data === 2)
-        {
-            item.detail = 'JavaScript details';
-            item.documentation = 'JavaScript documentation';
+            case "global":
+            {
+                item.detail = 'Global Struct';
+                item.documentation = 'The scopeless constant writable struct';
+                break;
+            }
+            case "macro":
+            {
+                item.detail = 'Macro';
+                break;
+            }
         }
         return item;
     }
