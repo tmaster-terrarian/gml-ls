@@ -5,7 +5,7 @@
   "scopeName": "source.gml",
   "patterns": [
     {
-      "begin": "((\\/\\*)\\s*(lua)\\s*(\\*\\/))\\s*(@)(\\\")",
+      "begin": "((\\/\\*)\\s*(lua)\\s*(\\*\\/))\\s*(@)(\\')",
       "beginCaptures": {
         "1": {
           "name": "comment.block.gml"
@@ -14,7 +14,7 @@
           "name": "punctuation.definition.comment.gml"
         },
         "3": {
-          "name": "keyword.control.gml"
+          "name": "string.gml"
         },
         "4": {
           "name": "punctuation.definition.comment.gml"
@@ -26,7 +26,7 @@
           "name": "punctuation.definition.string.template.begin.gml string.template.gml"
         }
       },
-      "end": "\\\"",
+      "end": "\\'",
       "endCaptures": {
         "0": {
           "name": "punctuation.definition.string.template.end.gml string.template.gml"
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "begin": "((\\/\\*)\\s*(json)\\s*(\\*\\/))\\s*(@)(\\\")",
+      "begin": "((\\/\\*)\\s*(json)\\s*(\\*\\/))\\s*(@)(\\')",
       "beginCaptures": {
         "1": {
           "name": "comment.block.gml"
@@ -48,7 +48,7 @@
           "name": "punctuation.definition.comment.gml"
         },
         "3": {
-          "name": "keyword.control.gml"
+          "name": "string.gml"
         },
         "4": {
           "name": "punctuation.definition.comment.gml"
@@ -60,7 +60,7 @@
           "name": "punctuation.definition.string.template.begin.gml string.template.gml"
         }
       },
-      "end": "\\\"",
+      "end": "\\'",
       "endCaptures": {
         "0": {
           "name": "punctuation.definition.string.template.end.gml string.template.gml"
@@ -69,6 +69,40 @@
       "patterns": [
         {
           "include": "source.json"
+        }
+      ]
+    },
+    {
+      "begin": "((\\/\\*)\\s*(ini)\\s*(\\*\\/))\\s*(@)(\\')",
+      "beginCaptures": {
+        "1": {
+          "name": "comment.block.gml"
+        },
+        "2": {
+          "name": "punctuation.definition.comment.gml"
+        },
+        "3": {
+          "name": "string.gml"
+        },
+        "4": {
+          "name": "punctuation.definition.comment.gml"
+        },
+        "5": {
+          "name": "keyword.operator.character.gml"
+        },
+        "6": {
+          "name": "punctuation.definition.string.template.begin.gml string.template.gml"
+        }
+      },
+      "end": "\\'",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.template.end.gml string.template.gml"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.ini"
         }
       ]
     },
@@ -88,6 +122,40 @@
       }
     },
     {
+      "begin": "(\\$)(\\\")",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.character.gml"
+        },
+        "2": {
+          "name": "string.quoted.double.gml"
+        }
+      },
+      "end": "\\\"",
+      "name": "string.quoted.double.gml",
+      "patterns": [
+        {
+          "begin": "\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.other.gml"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "keyword.other.gml"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.gml"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "match": "//.*$",
       "name": "comment.line.double-slash.gml"
     },
@@ -97,14 +165,15 @@
       "name": "comment.block.gml"
     },
     {
-      "begin": "\\'",
-      "end": "\\'",
-      "name": "string.quoted.single.gml"
-    },
-    {
       "begin": "\\\"",
       "end": "\\\"",
-      "name": "string.quoted.double.gml"
+      "name": "string.quoted.double.gml",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.gml"
+        }
+      ]
     },
     {
       "match": "(?i)\\b(argument_(relitive|count)|argument(9|8|7|6|5|4|3|2|15|14|13|12|11|10|1|0)|argument)\\b",
@@ -123,8 +192,12 @@
       "name": "constant.numeric.gml"
     },
     {
-      "match": "(?i)\\b(if|else|switch|case|default|break|for|repeat|while|do|until|continue|exit|return|with|try|catch|finally|delete)\\b",
+      "match": "\\b(if|else|switch|case|default|break|for|repeat|while|do|until|continue|exit|return|with|try|catch|finally|delete)\\b",
       "name": "keyword.control.gml"
+    },
+    {
+      "match": "(?<=\\: )\\b(Object|Sprite|Script|Sound|Shader|Sequence)Asset\\b",
+      "name": "storage.type.gml"
     },
     {
       "match": "(?<=\\b)\\s*\\:",
@@ -143,11 +216,11 @@
       "name": "keyword.operator.word.gml"
     },
     {
-      "match": ";|,|\\(|\\)|\\{|\\}|\\.",
+      "match": ",|\\(|\\)|\\{|\\}|\\.",
       "name": "keyword.other.gml"
     },
     {
-      "match": "(?i)\\b(all|noone|true|false|undefined)\\b",
+      "match": "(?i)\\b(all|noone|true|false|undefined|pointer_invalid|pointer_null|void)\\b",
       "name": "constant.language.gml"
     },
     {

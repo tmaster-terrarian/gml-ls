@@ -151,7 +151,7 @@ documents.onDidChangeContent(change => {
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     // In this simple example we get the settings for every validate run.
-    let settings = await getDocumentSettings(textDocument.uri);
+    // let settings = await getDocumentSettings(textDocument.uri);
 
     // The validator creates diagnostics for all uppercase words length 2 and more
     let text = textDocument.getText();
@@ -162,7 +162,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
     let problems = 0;
     let diagnostics: Diagnostic[] = [];
-    while ((m = pattern.exec(text)) && (n = pattern2.exec(m[0])) && problems < settings.maxNumberOfProblems) {
+    while ((m = pattern.exec(text)) && (n = pattern2.exec(m[0]))) {
         problems++;
         let diagnostic: Diagnostic = {
             severity: DiagnosticSeverity.Warning,
@@ -182,7 +182,96 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                         uri: textDocument.uri,
                         range: Object.assign({}, diagnostic.range)
                     },
-                    message: `name collision is more likely to occur`
+                    message: `${m[0]} is not all uppercase, name collisions are more likely to occur`
+                }
+            ]
+        }
+        diagnostics.push(diagnostic);
+    }
+
+    let structMemberMatchRegex = /\b[0-9]+\s*:/g
+    let structMemberMatch: RegExpExecArray | null;
+    while ((structMemberMatch = structMemberMatchRegex.exec(text))) {
+        problems++;
+        let diagnostic: Diagnostic = {
+            severity: DiagnosticSeverity.Error,
+            range: {
+                start: textDocument.positionAt(structMemberMatch.index + 1),
+                end: textDocument.positionAt(structMemberMatch.index + 1)
+            },
+            message: `struct member names cannot be a number`,
+            source: 'gml',
+            code: "struct.illegalMemberNameError"
+        };
+        if (hasDiagnosticRelatedInformationCapability)
+        {
+            diagnostic.relatedInformation = [
+                {
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
+                    },
+                    message: `struct member names cannot be a number`
+                }
+            ]
+        }
+        diagnostics.push(diagnostic);
+    }
+
+    let numberStartVariableNameMatchRegex = /\b[0-9]+[a-zA-Z_]+\b/g
+    let numberStartVariableNameMatch: RegExpExecArray | null;
+    while (((numberStartVariableNameMatch = numberStartVariableNameMatchRegex.exec(text)))) {
+        if(numberStartVariableNameMatch[0].match(/^0(b|x|o)/))
+            continue;
+        problems++;
+        let diagnostic: Diagnostic = {
+            severity: DiagnosticSeverity.Error,
+            range: {
+                start: textDocument.positionAt(numberStartVariableNameMatch.index + 1),
+                end: textDocument.positionAt(numberStartVariableNameMatch.index + 1)
+            },
+            message: `variable names cannot start with a number`,
+            source: 'gml',
+            code: "identifier.illegalNameError"
+        };
+        if (hasDiagnosticRelatedInformationCapability)
+        {
+            diagnostic.relatedInformation = [
+                {
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
+                    },
+                    message: `variable names cannot start with a number`
+                }
+            ]
+        }
+        diagnostics.push(diagnostic);
+    }
+
+    let badEmbeddedLanguageLiteralMatchRegex = /(\/\*\s*(\w+)\s*\*\/\s*@)(\")/g
+    let badEmbeddedLanguageLiteralMatch: RegExpExecArray | null;
+    while ((badEmbeddedLanguageLiteralMatch = badEmbeddedLanguageLiteralMatchRegex.exec(text))) {
+        problems++;
+        let diagnostic: Diagnostic = {
+            severity: DiagnosticSeverity.Warning,
+            range: {
+                start: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index),
+                end: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index + badEmbeddedLanguageLiteralMatch[0].length)
+            },
+            message: `embedded language strings should use single quotes`,
+            source: 'gml',
+            code: "string.badEmbeddedLanguageLiteral",
+        };
+        if (hasDiagnosticRelatedInformationCapability)
+        {
+            diagnostic.relatedInformation = [
+                {
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
+                    },
+                    message: `embedded language strings should use single quotes`
                 }
             ]
         }
