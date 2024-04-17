@@ -1,5 +1,7 @@
 # gml-ls: A GameMaker Language extension for vscode
 
+note: if you want to use an extension that is quite a bit more complete, you should check out [Stitch](https://github.com/bscotch/stitch) by bscotch.
+
 A simple extension that should support any versions including and above the `2022.0` (LTS) version of GameMaker Studio 2. It aims to support the latest `stable` versions of gamemaker as they come out.
 <br>(This extension uses a fair amount of the source code from an old(ish) [extension](https://github.com/gml-support/gml-support) created by LiarOnce under the MIT License)
 
