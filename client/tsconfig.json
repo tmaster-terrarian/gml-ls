@@ -1,11 +1,13 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "CommonJS",
 		"target": "es2021",
 		"lib": ["es2021"],
 		"outDir": "out",
 		"rootDir": "src",
-		"sourceMap": true
+		"sourceMap": true,
+		"moduleResolution": "Node",
+		"resolveJsonModule": true
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test"]

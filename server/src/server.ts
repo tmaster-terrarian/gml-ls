@@ -189,65 +189,65 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         diagnostics.push(diagnostic);
     }
 
-    let structMemberMatchRegex = /\b[0-9]+\s*:/g
-    let structMemberMatch: RegExpExecArray | null;
-    while ((structMemberMatch = structMemberMatchRegex.exec(text))) {
-        problems++;
-        let diagnostic: Diagnostic = {
-            severity: DiagnosticSeverity.Error,
-            range: {
-                start: textDocument.positionAt(structMemberMatch.index + 1),
-                end: textDocument.positionAt(structMemberMatch.index + 1)
-            },
-            message: `struct member names cannot be a number`,
-            source: 'gml',
-            code: "struct.illegalMemberNameError"
-        };
-        if (hasDiagnosticRelatedInformationCapability)
-        {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `struct member names cannot be a number`
-                }
-            ]
-        }
-        diagnostics.push(diagnostic);
-    }
+    // let structMemberMatchRegex = /\b[0-9]+\s*:/g
+    // let structMemberMatch: RegExpExecArray | null;
+    // while ((structMemberMatch = structMemberMatchRegex.exec(text))) {
+    //     problems++;
+    //     let diagnostic: Diagnostic = {
+    //         severity: DiagnosticSeverity.Error,
+    //         range: {
+    //             start: textDocument.positionAt(structMemberMatch.index + 1),
+    //             end: textDocument.positionAt(structMemberMatch.index + 1)
+    //         },
+    //         message: `struct member names cannot be a number`,
+    //         source: 'gml',
+    //         code: "struct.illegalMemberNameError"
+    //     };
+    //     if (hasDiagnosticRelatedInformationCapability)
+    //     {
+    //         diagnostic.relatedInformation = [
+    //             {
+    //                 location: {
+    //                     uri: textDocument.uri,
+    //                     range: Object.assign({}, diagnostic.range)
+    //                 },
+    //                 message: `struct member names cannot be a number`
+    //             }
+    //         ]
+    //     }
+    //     diagnostics.push(diagnostic);
+    // }
 
-    let numberStartVariableNameMatchRegex = /\b[0-9]+[a-zA-Z_]+\b/g
-    let numberStartVariableNameMatch: RegExpExecArray | null;
-    while (((numberStartVariableNameMatch = numberStartVariableNameMatchRegex.exec(text)))) {
-        if(numberStartVariableNameMatch[0].match(/^0(b|x|o)/))
-            continue;
-        problems++;
-        let diagnostic: Diagnostic = {
-            severity: DiagnosticSeverity.Error,
-            range: {
-                start: textDocument.positionAt(numberStartVariableNameMatch.index + 1),
-                end: textDocument.positionAt(numberStartVariableNameMatch.index + 1)
-            },
-            message: `variable names cannot start with a number`,
-            source: 'gml',
-            code: "identifier.illegalNameError"
-        };
-        if (hasDiagnosticRelatedInformationCapability)
-        {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `variable names cannot start with a number`
-                }
-            ]
-        }
-        diagnostics.push(diagnostic);
-    }
+    // let numberStartVariableNameMatchRegex = /\b[0-9]+[a-zA-Z_]+\b/g
+    // let numberStartVariableNameMatch: RegExpExecArray | null;
+    // while (((numberStartVariableNameMatch = numberStartVariableNameMatchRegex.exec(text)))) {
+    //     if(numberStartVariableNameMatch[0].match(/^0(b|x|o)/))
+    //         continue;
+    //     problems++;
+    //     let diagnostic: Diagnostic = {
+    //         severity: DiagnosticSeverity.Error,
+    //         range: {
+    //             start: textDocument.positionAt(numberStartVariableNameMatch.index + 1),
+    //             end: textDocument.positionAt(numberStartVariableNameMatch.index + 1)
+    //         },
+    //         message: `variable names cannot start with a number`,
+    //         source: 'gml',
+    //         code: "identifier.illegalNameError"
+    //     };
+    //     if (hasDiagnosticRelatedInformationCapability)
+    //     {
+    //         diagnostic.relatedInformation = [
+    //             {
+    //                 location: {
+    //                     uri: textDocument.uri,
+    //                     range: Object.assign({}, diagnostic.range)
+    //                 },
+    //                 message: `variable names cannot start with a number`
+    //             }
+    //         ]
+    //     }
+    //     diagnostics.push(diagnostic);
+    // }
 
     let badEmbeddedLanguageLiteralMatchRegex = /(\/\*\s*(\w+)\s*\*\/\s*@)(\")/g
     let badEmbeddedLanguageLiteralMatch: RegExpExecArray | null;
@@ -295,11 +295,6 @@ connection.onCompletion(
         // info and always provide the same completion items.
         return [
             {
-                label: 'global',
-                data: "global",
-                kind: CompletionItemKind.Module
-            },
-            {
                 label: '#macro',
                 data: "macro",
                 kind: CompletionItemKind.Constant
@@ -314,12 +309,6 @@ connection.onCompletionResolve(
     (item: CompletionItem): CompletionItem => {
         switch (item.data)
         {
-            case "global":
-            {
-                item.detail = 'Global Struct';
-                item.documentation = 'The scopeless constant writable struct';
-                break;
-            }
             case "macro":
             {
                 item.detail = 'Macro';

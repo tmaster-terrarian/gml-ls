@@ -65,6 +65,19 @@
 				}
 			}
 		],
+		"configurationDefaults": {
+			"[gml]": {
+				"editor.semanticHighlighting.enabled": true
+			},
+			"editor.semanticTokenColorCustomizations": {
+				"enabled": true,
+				"rules": {
+					"*.deprecated": {
+						"strikethrough": true
+					}
+				}
+			}
+		},
 		"grammars": [
 			{
 				"language": "gml",

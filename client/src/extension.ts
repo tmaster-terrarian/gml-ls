@@ -14,6 +14,7 @@ let client: LanguageClient;
 
 import GmlHoverProvider from "./providers/GmlHoverProvider";
 import GmlCompletionProvider from "./providers/GmlCompletionProvider";
+import GmlDocumentSemanticTokensProvider from "./providers/GmlDocumentSemanticTokensProvider";
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -52,31 +53,66 @@ export function activate(context: vscode.ExtensionContext)
 		clientOptions
 	);
 
+	const workspaceData = {
+		getURIs: () => workspace.findFiles('**/*.gml', '**/datafiles/**'), // find all gml files that aren't in the included files directory
+	}
+
+	const tokenTypes = ['class', 'type', 'enum', 'function', 'variable', 'number', 'string'];
+	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor'];
+	const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
+
 	context.subscriptions.push(vscode.languages.registerHoverProvider({ language: "gml" }, new GmlHoverProvider()));
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "gml" }, new GmlCompletionProvider(), "."));
+	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "gml" }, new GmlDocumentSemanticTokensProvider(legend), legend));
 	context.subscriptions.push(vscode.languages.registerDefinitionProvider({ language: "gml" }, {
 		provideDefinition(document, position, token) {
-			let text = document.getText()
-
 			const word = document.getText(document.getWordRangeAtPosition(position))
-			let vardef = new RegExp("\\bvar\\s+(" + word + ")\\b").exec(text)
-			if(vardef)
-			{
-				let idx = vardef.index + 4;
-				for(var i = 0; i < 1000; i++)
-					if(text[idx] == " " || text[idx] == "\t")
-						idx++;
-					else break;
 
-				return new vscode.Location(document.uri, document.getWordRangeAtPosition(document.positionAt(idx)));
+			for(const doc of workspace.textDocuments)
+			{
+				const text = doc.getText()
+
+				let macrodef = new RegExp("(?<=#macro\\s)" + word + "\\b").exec(text)
+				if(macrodef)
+				{
+					let idx = macrodef.index;
+
+					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
+				}
+
+				let functiondef = new RegExp("((?<=\\bfunction\\s)\\s*" + word + "\\b|\\b" + word + "(?=\\s*=\\s*function\\s*\\())").exec(text)
+				if(functiondef)
+				{
+					let idx = functiondef.index;
+					for(var i = 0; i < 1000; i++)
+						if(text[idx] !== word[0])
+							idx++;
+						else break;
+
+					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
+				}
+
+				let gobal = new RegExp("(?<=\\bglobal)\\s*\\.\\s*(" + word + ")\\s*=").exec(text)
+				if(gobal)
+				{
+					let idx = gobal.index;
+					for(var i = 0; i < 1000; i++)
+						if(text[idx] !== word[0])
+							idx++;
+						else break;
+
+					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
+				}
 			}
 
-			let macrodef = new RegExp("#macro\\s" + word + "\\b").exec(text)
-			if(macrodef)
+			const text = document.getText()
+
+			let vardef = new RegExp("(?<=\\bvar\\s)\\s*(" + word + ")\\b").exec(text)
+			if(vardef)
 			{
-				let idx = macrodef.index + 7;
+				let idx = vardef.index;
 				for(var i = 0; i < 1000; i++)
-					if(text[idx] == " " || text[idx] == "\t")
+					if(text[idx] !== word[0])
 						idx++;
 					else break;
 

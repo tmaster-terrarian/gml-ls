@@ -135,7 +135,7 @@
       "name": "string.quoted.double.gml",
       "patterns": [
         {
-          "begin": "\\{",
+          "begin": "[^\\\\]\\{",
           "end": "\\}",
           "beginCaptures": {
             "0": {
@@ -176,6 +176,22 @@
       ]
     },
     {
+      "begin": "(@)\\'",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.character.gml"
+        }
+      },
+      "end": "\\'",
+      "name": "string.quoted.single.gml",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.gml"
+        }
+      ]
+    },
+    {
       "match": "(?i)\\b(argument_(relitive|count)|argument(9|8|7|6|5|4|3|2|15|14|13|12|11|10|1|0)|argument)\\b",
       "name": "constant.language.gml"
     },
@@ -196,12 +212,8 @@
       "name": "keyword.control.gml"
     },
     {
-      "match": "(?<=\\: )\\b(Object|Sprite|Script|Sound|Shader|Sequence)Asset\\b",
-      "name": "storage.type.gml"
-    },
-    {
-      "match": "(?<=\\b)\\s*\\:",
-      "name": "meta.object-literal.key.gml"
+      "match": "(?<=\\: )\\b(AnimationCurve|Extension|Font|Object|ParticleSystem|Path|Room|Script|Sequence|Shader|Sound|Sprite|TileSet|Timeline)Asset\\b",
+      "name": "support.type.gml"
     },
     {
       "match": "\\[\\#|\\[\\?|\\[@|\\[|\\[\\$|\\]|\\-|\\+|\\||=|%|\\^|&|\\*|!|<|>|/",
@@ -234,23 +246,6 @@
     {
       "match": "(?i)\\b(self|other|(global)?var|local|enum|static|constructor|function|new|as|of|in)\\b",
       "name": "constant.language.gml"
-    },
-    {
-      "match": "(?<=\\bnew\\b)\\s*?(\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b\\s*?\\.\\s*?)*?\\K\\b[a-zA-Z_][a-zA-Z_0-9]*?(?=\\s*?\\()",
-      "captures": {
-        "0": {
-        "name": "support.class.gml"
-        }
-      }
-    },
-    {
-      "match": "\\b[a-zA-Z_][a-zA-Z_0-9]*?(?=\\s*?\\((.|\\s)*\\)\\s*?\\bconstructor\\b)",
-      "name": "support.variable.local.gml",
-      "captures": {
-        "0": {
-        "name": "support.class.gml"
-        }
-      }
     },
     {
       "match": "\\b[a-zA-Z_][a-zA-Z_0-9]*?(?=\\s*?\\=\\s*?function\\b)",
@@ -635,18 +630,6 @@
     {
       "match": "(?x)\\b(angle_difference|debug_event|io_clear|environment_get_variable|browser_input_capture|shop_leave_rating|code_is_compiled|zip_unzip|load_csv|shaders_are_supported)\\b",
       "name": "support.function.others.gml"
-    },
-    {
-      "include": "source.gml-thirdparty",
-      "name": "source.gml-thirdparty.gml"
-    },
-    {
-      "include": "source.gml-extra",
-      "name": "source.gml-extra.gml"
-    },
-    {
-      "match": "\\b[A-Z][A-Z_0-9]*?\\b",
-      "name": "variable.other.constant.gml"
     },
     {
       "match": "\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b",
