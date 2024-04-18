@@ -68,16 +68,16 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                 continue
             }
 
-            let vardef = new RegExp("\\bvar\\s+" + word + "\\b").exec(text)
-            if(vardef)
-            {
-                tokensBuilder.push(
-                    wordRange,
-                    'variable',
-                    ['local']
-                )
-                continue
-            }
+            // let vardef = new RegExp("\\bvar\\s+" + word + "\\b").exec(text)
+            // if(vardef)
+            // {
+            //     tokensBuilder.push(
+            //         wordRange,
+            //         'variable',
+            //         ['local']
+            //     )
+            //     continue
+            // }
 
             for(const document of vscode.workspace.textDocuments)
             {
