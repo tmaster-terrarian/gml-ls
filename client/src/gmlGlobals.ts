@@ -1,3 +1,4 @@
+/* eslint-disable */
 export interface FunctionEntry {
     description?: string,
     documentationLink?: string,
@@ -12,7 +13,7 @@ export interface FunctionEntry {
     deprecated?: boolean
 }
 
-export const globalFunctions: { [name: string]: FunctionEntry} = {
+export const globalFunctions: Record<string, FunctionEntry> = {
     abs:
     {
         description:
@@ -1772,7 +1773,7 @@ export const globalFunctions: { [name: string]: FunctionEntry} = {
 	gesture_get_rotate_angle: {},
 	gesture_get_tap_count: {}
 },
-globalVariables: { [name: string]: FunctionEntry} = {
+globalVariables: Record<string, FunctionEntry> = {
     async_load: {},
     browser_height: {},
     browser_width: {},
@@ -1954,7 +1955,7 @@ globalVariables: { [name: string]: FunctionEntry} = {
     view_yport: {deprecated: true},
     view_yview: {deprecated: true},
 },
-constants: { [name: string]: FunctionEntry} = {
+constants: Record<string, FunctionEntry> = {
     _GMLINE_: {},
     _GMFILE_: {},
     _GMFUNCTION_: {},
@@ -2543,7 +2544,7 @@ constants: { [name: string]: FunctionEntry} = {
 	ge_lose: {},
 	buffer_text: {}
 },
-keywords: { [name: string]: FunctionEntry} = {
+keywords: Record<string, FunctionEntry> = {
     argument: {},
     argument_count: {},
     argument_relative: {},
@@ -2571,3 +2572,15 @@ keywords: { [name: string]: FunctionEntry} = {
     while: {},
     with: {}
 };
+
+export function compileFunctions()
+{
+    for(const e in globalFunctions)
+    {
+        const entry = globalFunctions[e]
+        if(!entry.parameters)
+            entry.parameters = []
+        if(!entry.signature)
+            entry.signature = "()"
+    }
+}

@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 
+import * as gmlGlobals from "./gmlGlobals"
+
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -24,6 +26,8 @@ export function activate(context: vscode.ExtensionContext)
 	const serverModule = context.asAbsolutePath(
 		path.join('server', 'out', 'server.js')
 	);
+
+	gmlGlobals.compileFunctions()
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
