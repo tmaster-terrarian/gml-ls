@@ -1,3 +1,5 @@
+import { Color } from "vscode";
+
 /* eslint-disable */
 export interface FunctionEntry {
     description?: string,
@@ -10,7 +12,8 @@ export interface FunctionEntry {
     }[]
     returns?: string,
     detail?: string,
-    deprecated?: boolean
+    deprecated?: boolean,
+	color?: Color,
 }
 
 export let globalFunctions: Record<string, FunctionEntry> = {
@@ -554,25 +557,25 @@ constants: Record<string, FunctionEntry> = {
 	cr_sqlwait: {},
 	cr_uparrow: {},
 	cr_vsplit: {},
-	c_aqua: {},
-	c_black: {},
-	c_blue: {},
-	c_dkgray: {},
-	c_fuchsia: {},
-	c_gray: {},
-	c_green: {},
-	c_lime: {},
-	c_ltgray: {},
-	c_maroon: {},
-	c_navy: {},
-	c_olive: {},
-	c_orange: {},
-	c_purple: {},
-	c_red: {},
-	c_silver: {},
-	c_teal: {},
-	c_white: {},
-	c_yellow: {},
+	c_aqua: { color: new Color(0, 1, 1, 1) },
+	c_black: { color: new Color(0, 0, 0, 1) },
+	c_blue: { color: new Color(0, 0, 1, 1) },
+	c_dkgray: { color: new Color(0.25, 0.25, 0.25, 1) },
+	c_fuchsia: { color: new Color(1, 0, 1, 1) },
+	c_gray: { color: new Color(0.5, 0.5, 0.5, 1) },
+	c_green: { color: new Color(0, 0.5, 0, 1) },
+	c_lime: { color: new Color(0, 1, 0, 1) },
+	c_ltgray: { color: new Color(0.75, 0.75, 0.75, 1) },
+	c_maroon: { color: new Color(0.5, 0, 0, 1) },
+	c_navy: { color: new Color(0, 0, 0.5, 1) },
+	c_olive: { color: new Color(0.5, 0.5, 0, 1) },
+	c_orange: { color: new Color(1, 0.63, 0.25, 1) },
+	c_purple: { color: new Color(0.5, 0, 0.5, 1) },
+	c_red: { color: new Color(1, 0, 0, 1) },
+	c_silver: { color: new Color(0.75, 0.75, 0.75, 1) },
+	c_teal: { color: new Color(0, 0.75, 0.75, 1) },
+	c_white: { color: new Color(1, 1, 1, 1) },
+	c_yellow: { color: new Color(1, 1, 0, 1) },
 	DEFAULT_CHARSET: {},
 	device_emulator: {},
 	device_ios_ipad: {},

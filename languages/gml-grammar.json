@@ -240,7 +240,7 @@
       "name": "variable.other.constant.gml"
     },
     {
-      "match": "\\#[0-9a-fA-F]+",
+      "match": "\\$|#[0-9a-fA-F]+",
       "name": "string.color.gml"
     },
     {

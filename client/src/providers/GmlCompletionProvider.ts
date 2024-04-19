@@ -11,18 +11,28 @@ export default class GmlCompletionProvider {
         let result = [];
 
         let range = document.getWordRangeAtPosition(position);
-        const prefix = range ? document.getText(range) : '';
         if (!range) {
             range = new vscode.Range(position, position);
         }
+        const prefix = range ? document.getText(new vscode.Range(document.positionAt(0), range.end)) : '';
         const added = {};
 
         const createNewProposal = (kind: vscode.CompletionItemKind, name: string, entry: FunctionEntry, type = undefined) => {
             const proposal = new vscode.CompletionItem(name);
             proposal.kind = kind;
             if (entry) {
+                const tags = []
+
                 if (entry.description) {
                     proposal.documentation = new vscode.MarkdownString(entry.description.replaceAll(/^(\t| )+/gm, ""));
+                }
+
+                if(entry.deprecated)
+                    tags.push(vscode.CompletionItemTag.Deprecated)
+
+                if(entry.color)
+                {
+                    proposal.kind = vscode.CompletionItemKind.Color
                 }
 
                 if (entry.signature) {
@@ -43,6 +53,7 @@ export default class GmlCompletionProvider {
                 if (entry.detail) {
                     proposal.detail = entry.detail;
                 }
+                proposal.tags = tags
             }
             return proposal;
         };
@@ -95,7 +106,7 @@ export default class GmlCompletionProvider {
         {
             const text = document.getText()
 
-            const macroMatch = /#macro\s([a-zA-Z_][a-zA-Z0-9_]*)\s((?:[^\n](\\(\n|\r\n))?)+(?=\n|$))/g;
+            const macroMatch = /#macro ([a-zA-Z_][a-zA-Z0-9_]*) ((?:[^\n](\\(\n|\r\n))?)+(?=\n|$))/g;
             match = null;
             while (match = macroMatch.exec(text)) {
                 const word = match[1];

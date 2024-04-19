@@ -108,7 +108,7 @@ export default class GmlHoverProvider {
         {
             const text = document.getText()
 
-            let macrodef = new RegExp("#macro\\s(" + name + ")\\s((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
+            let macrodef = new RegExp("#macro (" + name + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
             if(macrodef)
             {
                 return new vscode.Hover([
