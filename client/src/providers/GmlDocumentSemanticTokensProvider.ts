@@ -2,6 +2,8 @@
 import * as vscode from "vscode";
 import * as gmlGlobals from "../gmlGlobals"
 
+// #04de80 is very green
+
 export default class GmlDocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     legend: vscode.SemanticTokensLegend
 
@@ -32,7 +34,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
             let cont = false
             while(inWhitespace = inWhitespacePattern.exec(text))
             {
-                if((inWhitespace.index <= wordMatch.index) && ((inWhitespace.index + inWhitespace[0].length - 1) >= (wordMatch.index + wordMatch[0].length - 1)))
+                if((inWhitespace.index <= wordMatch.index) && ((inWhitespace.index + inWhitespace[0].length) >= (wordMatch.index + wordMatch[0].length - 1)))
                 {
                     cont = true
                     break
@@ -49,7 +51,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
 
             if(entry)
             {
-                const modifiers = ['defaultLibrary']
+                let modifiers = ['defaultLibrary']
 
                 if(entry.deprecated)
                     modifiers.push('deprecated')
@@ -57,8 +59,10 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                 let _type = "variable"
                 if(type == "function")
                     _type = "function"
+                if(type == "variable")
+                    modifiers.push('builtinLocal')
                 if(type == "constant")
-                    modifiers.push('readonly')
+                    modifiers = ["readonly"]
 
                 tokensBuilder.push(
                     wordRange,
@@ -94,10 +98,30 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                     break
                 }
 
-                let functiondef = new RegExp("\\bfunction\\s+" + word + "\\s*\\(.*\\)\\s*(constructor)?").exec(text)
-                if(functiondef)
+                let functionMatch1 = new RegExp("\\bfunction\\s+" + word + "\\s*\\(.*\\)\\s*(constructor)?").exec(text);
+                let functionMatch2 = new RegExp("\\b" + word + "\\s*(=|:)\\s*function\\s*\\(.*\\)\\s*(constructor)?").exec(text);
+                if(functionMatch1)
                 {
-                    if(functiondef[1] === "constructor")
+                    if(functionMatch1[1] === "constructor")
+                    {
+                        tokensBuilder.push(
+                            wordRange,
+                            'class',
+                            ['constructor']
+                        )
+                    }
+                    else
+                    {
+                        tokensBuilder.push(
+                            wordRange,
+                            'function'
+                        )
+                    }
+                    break
+                }
+                else if(functionMatch2)
+                {
+                    if(functionMatch2[2] === "constructor" && functionMatch2[1] !== ":")
                     {
                         tokensBuilder.push(
                             wordRange,

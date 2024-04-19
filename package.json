@@ -1,6 +1,6 @@
 {
 	"name": "gml-ls",
-	"description": "A language server example",
+	"description": "A language provider for GameMaker Studio 2 (LTS and above)",
 	"author": {
 		"name": "bscit",
 		"url": "https://bscit.dev"
@@ -27,15 +27,15 @@
 		],
 		"configuration": {
 			"type": "object",
-			"title": "Example configuration",
+			"title": "config",
 			"properties": {
-				"gmlLanguageServer.maxNumberOfProblems": {
+				"gml-ls.maxNumberOfProblems": {
 					"scope": "resource",
 					"type": "number",
 					"default": 100,
 					"description": "Controls the maximum number of problems produced by the server."
 				},
-				"gmlLanguageServer.trace.server": {
+				"gml-ls.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -74,7 +74,8 @@
 				"rules": {
 					"*.deprecated": {
 						"strikethrough": true
-					}
+					},
+					"*.builtinLocal": "#04de80"
 				}
 			}
 		},

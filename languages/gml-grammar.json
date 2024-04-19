@@ -212,7 +212,7 @@
       "name": "keyword.control.gml"
     },
     {
-      "match": "(?<=\\: )\\b(AnimationCurve|Extension|Font|Object|ParticleSystem|Path|Room|Script|Sequence|Shader|Sound|Sprite|TileSet|Timeline)Asset\\b",
+      "match": "(?<=\\: )\\b(?:object|Color|(AnimationCurve|Extension|Font|Object|ParticleSystem|Path|Room|Script|Sequence|Shader|Sound|Sprite|TileSet|Timeline)Asset)\\b",
       "name": "support.type.gml"
     },
     {
@@ -641,7 +641,7 @@
     },
     {
       "match": "(?i)\\b(x|y|xprevious|yprevious|xstart|ystart|hspeed|vspeed|direction|speed|friction|gravity|gravity_direction|path_index|path_position|path_positionprevious|path_speed|path_scale|path_orientation|path_endaction|object_index|id|solid|persistent|mask_index|instance_count|instance_id|alarm|timeline_index|timeline_position|timeline_speed|timeline_running|timeline_loop|visible|sprite_index|sprite_width|sprite_height|sprite_xoffset|sprite_yoffset|image_number|image_index|image_speed|depth|image_xscale|image_yscale|image_angle|image_alpha|image_blend|bbox_left|bbox_right|bbox_top|bbox_bottom|layer|phy_rotation|phy_position_x|phy_position_y|phy_angular_velocity|phy_linear_velocity_x|phy_linear_velocity_y|phy_speed_x|phy_speed_y|phy_speed|phy_angular_damping|phy_linear_damping|phy_bullet|phy_fixed_rotation|phy_active|phy_mass|phy_inertia|phy_com_x|phy_com_y|phy_dynamic|phy_kinematic|phy_sleeping|phy_collision_points|phy_collision_x|phy_collision_y|phy_col_normal_x|phy_col_normal_y|phy_position_xprevious|phy_position_yprevious)\\b",
-      "name": "support.variable.local.gml"
+      "name": "support.variable.local.builtinLocal.gml"
     },
     {
       "match": "(?i)\\b(working_directory|webgl_enabled|view_yview|view_yport|view_xview|view_xport|view_wview|view_wport|view_vspeed|view_visible|view_vborder|view_surface_id|view_object|view_hview|view_hspeed|view_hport|view_hborder|view_enabled|view_current|view_angle|undefined|transition_steps|transition_kind|transition_color|temp_directory|show_score|show_lives|show_health|secure_mode|score|room_width|room_speed|room_persistent|room_last|room_height|room_first|room_caption|room|pointer_null|pointer_invalid|os_version|os_type|os_device|os_browser|mouse_y|mouse_x|mouse_lastbutton|mouse_button|lives|keyboard_string|keyboard_lastkey|keyboard_lastchar|keyboard_key|instance_id|instance_count|iap_data|health|gamemaker_version|gamemaker_registered|gamemaker_pro|game_save_id|game_project_name|game_id|game_display_name|fps_real|fps|event_type|event_object|event_number|event_action|error_occurred|error_last|display_aa|delta_time|debug_mode|cursor_sprite|current_year|current_weekday|current_time|current_second|current_month|current_minute|current_hour|current_day|caption_score|caption_lives|caption_health|browser_width|browser_height|background_yscale|background_y|background_xscale|background_x|background_width|background_vtiled|background_vspeed|background_visible|background_showcolour|background_showcolor|background_index|background_htiled|background_hspeed|background_height|background_foreground|background_colour|background_color|background_blend|background_alpha|async_load|application_surface)\\b",

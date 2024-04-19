@@ -131,7 +131,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
     {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'gmlLanguageServer'
+            section: 'gml-ls'
         });
         documentSettings.set(resource, result);
     }

@@ -1,3 +1,11 @@
 {
-    "gmlLanguageServer.trace.server": "messages"
+    "gml-ls.trace.server": "off",
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "**/globals.json"
+            ],
+            "url": "./.vscode/globals-schema.json"
+        }
+    ],
 }

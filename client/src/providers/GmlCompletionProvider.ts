@@ -126,6 +126,11 @@ export default class GmlCompletionProvider {
             // }
         }
 
+        const commandCompletion = new vscode.CompletionItem('new');
+        commandCompletion.kind = vscode.CompletionItemKind.Keyword;
+        commandCompletion.insertText = 'new ';
+        commandCompletion.command = { command: 'editor.action.triggerSuggest', title: 'Re-trigger completions...' };
+
         return Promise.resolve(result);
     }
 }

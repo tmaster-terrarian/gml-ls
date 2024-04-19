@@ -17,6 +17,7 @@ let client: LanguageClient;
 import GmlHoverProvider from "./providers/GmlHoverProvider";
 import GmlCompletionProvider from "./providers/GmlCompletionProvider";
 import GmlDocumentSemanticTokensProvider from "./providers/GmlDocumentSemanticTokensProvider";
+import GmlColorProvider from "./providers/GmlColorProvider";
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -27,7 +28,7 @@ export function activate(context: vscode.ExtensionContext)
 		path.join('server', 'out', 'server.js')
 	);
 
-	gmlGlobals.compileFunctions()
+	gmlGlobals.compile()
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
@@ -42,7 +43,7 @@ export function activate(context: vscode.ExtensionContext)
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
-		documentSelector: [{ scheme: 'file', language: 'gml' }],
+		documentSelector: [{ language: 'gml' }],
 		synchronize: {
 			// Notify the server about file changes to '.gml files contained in the workspace
 			fileEvents: workspace.createFileSystemWatcher('**/.gml')
@@ -51,7 +52,7 @@ export function activate(context: vscode.ExtensionContext)
 
 	// Create the language client and start the client.
 	client = new LanguageClient(
-		'gmlLanguageServer',
+		'gml-ls',
 		'gml Language Server',
 		serverOptions,
 		clientOptions
@@ -62,7 +63,7 @@ export function activate(context: vscode.ExtensionContext)
 	}
 
 	const tokenTypes = ['class', 'type', 'enum', 'function', 'variable', 'number', 'string'];
-	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor'];
+	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor', 'builtinLocal'];
 	const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
 
 	context.subscriptions.push(vscode.languages.registerHoverProvider({ language: "gml" }, new GmlHoverProvider()));
@@ -126,6 +127,7 @@ export function activate(context: vscode.ExtensionContext)
 			return null;
 		},
 	}));
+	context.subscriptions.push(vscode.languages.registerColorProvider({ language: "gml" }, new GmlColorProvider()));
 
 	// Start the client. This will also launch the server
 	client.start();

@@ -4,6 +4,27 @@ import * as vscode from "vscode";
 
 import { FunctionEntry } from "../gmlGlobals";
 
+class MarkdownString extends vscode.MarkdownString
+{
+    supportHtml: boolean = true;
+    isTrusted?: boolean | { readonly enabledCommands: readonly string[]; } = true;
+}
+
+const createMDString = (input: string, lang?: string): MarkdownString => {
+    const md = new MarkdownString("")
+    md.supportHtml = true
+    const values = input.split("''")
+    for(var i = 0; i < values.length; i++)
+    {
+        const val = values[i]
+        if(i % 2 == 1)
+            md.appendCodeblock(val, lang)
+        else
+            md.appendMarkdown(val)
+    }
+    return md
+}
+
 export default class GmlHoverProvider {
     public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
         const wordRange = document.getWordRangeAtPosition(position);
@@ -40,14 +61,14 @@ export default class GmlHoverProvider {
         const createHover = (entry: FunctionEntry) =>
         {
             const contents = [];
-            let signature = "    " + name
-            if (entry.signature) {
-                signature = "    " + name + entry.signature;
+            let signature = name
+            if(entry.signature) {
+                signature = name + entry.signature;
             }
             if(entry.parameters)
             {
-                signature = type ? `    (${type}) ` : '    ';
-                signature += (entry.deprecated ? `~~${name}~~` : name);
+                signature = type ? `(${type}) ` : '    ';
+                signature += name;
                 signature += '(';
                 if (entry.parameters && entry.parameters.length != 0) {
                     let params = '';
@@ -57,23 +78,27 @@ export default class GmlHoverProvider {
                 signature += ')' + (entry.returns ? (": " + entry.returns) : ": void");
             }
 
-            contents.push(new vscode.MarkdownString(signature));
+            contents.push(new MarkdownString().appendCodeblock(signature, entry.parameters ? "typescript" : undefined));
 
             let docLink = entry.documentationLink ? "[Go to Documentation](https://manual.gamemaker.io/monthly/en/GameMaker_Language/GML_Reference/" + entry.documentationLink + ".htm)" : null
 
             if(entry.description)
-                contents.push(new vscode.MarkdownString(
+                contents.push(createMDString(
                     (entry.deprecated ? "*Deprecated or Obsolete*\n\n" : "") + entry.description.replaceAll(/^(\t| )+/gm, "") + (docLink ? "\n\n" + docLink : "")
                 ));
             else if(entry.documentationLink)
-                contents.push(new vscode.MarkdownString((entry.deprecated ? "*Deprecated or Obsolete*\n\n" : "") + docLink))
+                contents.push(createMDString((entry.deprecated ? "*Deprecated or Obsolete*\n\n" : "") + docLink))
             else if(entry.deprecated)
-                contents.push(new vscode.MarkdownString("*Deprecated or Obsolete*"))
+                contents.push(createMDString("*Deprecated or Obsolete*"))
 
             return new vscode.Hover(contents, wordRange);
         }
         if(entry)
 		{
+            if(_type == "keyword" && name == "noone")
+                return new vscode.Hover([
+                    new MarkdownString().appendCodeblock(`-4`)
+                ], wordRange)
             if(_type == "keyword")
                 return undefined;
             return createHover(entry)
@@ -87,7 +112,7 @@ export default class GmlHoverProvider {
             if(macrodef)
             {
                 return new vscode.Hover([
-                    new vscode.MarkdownString(`    #macro ${name}: ${macrodef[2]}`)
+                    new MarkdownString().appendCodeblock(`#macro ${name}: ${macrodef[2]}`)
                 ], wordRange)
             }
 
@@ -95,16 +120,16 @@ export default class GmlHoverProvider {
             if(gopbal)
             {
                 return new vscode.Hover([
-                    new vscode.MarkdownString(`    ${gopbal[0]}`)
+                    new MarkdownString().appendCodeblock(`${gopbal[0]}`)
                 ], wordRange)
             }
 
             let functionMatch1 = new RegExp("(?<=\\bfunction\\s)\\s*" + name + "\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
-            let functionMatch2 = new RegExp("\\b" + name + "\\s*=\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
+            let functionMatch2 = new RegExp("\\b" + name + "\\s*(=|:)\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
             if(functionMatch1 || functionMatch2)
             {
                 return new vscode.Hover([
-                    new vscode.MarkdownString(`    (${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "method") : (functionMatch2[2] === "constructor" ? "constructor" : "method")}) ${name}(${functionMatch1 ? functionMatch1[1] : functionMatch2[1]})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[2] === "constructor" ? ": " + name : "")}`)
+                    new MarkdownString().appendCodeblock(`\(${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "method") : (functionMatch2[3] === "constructor" ? "constructor" : "method")}) ${name}(${functionMatch1 ? functionMatch1[1] : functionMatch2[1]})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[3] === "constructor" ? ": " + name : "")}`, "typescript")
                 ], wordRange)
             }
         }
@@ -115,7 +140,7 @@ export default class GmlHoverProvider {
         if(vardef)
         {
             return new vscode.Hover([
-                new vscode.MarkdownString(`    var ${name}`)
+                new MarkdownString().appendCodeblock(`var ${name}`)
             ], wordRange)
         }
 
@@ -123,7 +148,7 @@ export default class GmlHoverProvider {
         if(numberLiteral)
         {
             return new vscode.Hover([
-                new vscode.MarkdownString(`    ${Number(numberLiteral[0])}`)
+                new MarkdownString().appendCodeblock(`${Number(numberLiteral[0])}`)
             ], wordRange)
         }
 
