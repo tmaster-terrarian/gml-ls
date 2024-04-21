@@ -14,7 +14,8 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
 
     provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.SemanticTokens>
     {
-        // analyze the document and return semantic tokens
+        if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
+        if(!vscode.workspace.getConfiguration('gml-ls').get('semanticTokens', true)) return
 
         const text = document.getText()
 
@@ -59,7 +60,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                 let _type = "variable"
                 if(type == "function")
                     _type = "function"
-                if(type == "variable")
+                if(type == "variable" && vscode.workspace.getConfiguration('gml-ls').get('colorizeInstanceVariables', true))
                     modifiers.push('builtinLocal')
                 if(type == "constant")
                     modifiers = ["readonly"]

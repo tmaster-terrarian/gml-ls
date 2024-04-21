@@ -116,6 +116,7 @@ interface Settings
     enableCompletions: boolean
     workspaceCompletions: boolean
     semanticTokens: boolean
+    colorizeInstanceVariables: boolean
     enableHovers: boolean
     workspaceHovers: boolean
     enableReferences: boolean
@@ -136,6 +137,7 @@ const defaultSettings: Settings = {
     enableCompletions: true,
     workspaceCompletions: true,
     semanticTokens: true,
+    colorizeInstanceVariables: true,
     enableHovers: true,
     workspaceHovers: true,
     enableReferences: true,

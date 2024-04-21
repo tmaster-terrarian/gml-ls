@@ -143,12 +143,12 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider, G
                 returns.push(new vscode.ColorInformation(wordRange, entry.color));
                 tokens++;
 
-                if(tokens == maxTokens)
-                {
-                    let userInput = await warnAboutTooDamnManyTokens()
-                    if(userInput == undefined || userInput.title == "Abort")
-                        return returns;
-                }
+                // if(tokens == maxTokens)
+                // {
+                //     let userInput = await warnAboutTooDamnManyTokens()
+                //     if(userInput == undefined || userInput.title == "Abort")
+                //         return returns;
+                // }
             }
             else
             {
@@ -249,12 +249,7 @@ function warnAboutTooDamnManyTokens()
     return vscode.window.showWarningMessage(
         `The Color Provider detected a very large amount of tokens in the current file`,
         {
-            detail: "too many tokens",
-            modal: true
-        },
-        <vscode.MessageItem>{
-            title: "Abort",
-            isCloseAffordance: true
+            detail: "too many tokens"
         },
         <vscode.MessageItem>{
             title: "Parse Anyway",
