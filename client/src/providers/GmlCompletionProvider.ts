@@ -1,20 +1,26 @@
 /* eslint-disable */
-import * as gmlGlobals from "../gmlGlobals";
+import * as gmlGlobals from "./gmlGlobals";
 import * as vscode from "vscode";
 
-import { FunctionEntry } from "../gmlGlobals";
+import { FunctionEntry } from "./gmlGlobals";
 
-export default class GmlCompletionProvider {
+export default class GmlCompletionProvider implements vscode.CompletionItemProvider {
     triggerCharacters = ['.'];
     globals = {}
-    async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
+    async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.CompletionItem[]>
+    {
+        if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
+        if(!vscode.workspace.getConfiguration('gml-ls').get('enableCompletions', true)) return
+
+        const includeWorkspaceCompletions = vscode.workspace.getConfiguration('gml-ls').get('workspaceCompletions', true)
+
         let result = [];
 
         let range = document.getWordRangeAtPosition(position);
+        const prefix = range ? document.getText(range) : '';
         if (!range) {
             range = new vscode.Range(position, position);
         }
-        const prefix = range ? document.getText(new vscode.Range(document.positionAt(0), range.end)) : '';
         const added = {};
 
         const createNewProposal = (kind: vscode.CompletionItemKind, name: string, entry: FunctionEntry, type = undefined) => {
@@ -30,8 +36,7 @@ export default class GmlCompletionProvider {
                 if(entry.deprecated)
                     tags.push(vscode.CompletionItemTag.Deprecated)
 
-                if(entry.color)
-                {
+                if(entry.color) {
                     proposal.kind = vscode.CompletionItemKind.Color
                 }
 
@@ -61,17 +66,17 @@ export default class GmlCompletionProvider {
             return prefix.length === 0 || name.length >= prefix.length && name.substr(0, prefix.length) === prefix;
         };
 
-        for (const globalfunctions in gmlGlobals.globalFunctions) {
-            if (gmlGlobals.globalFunctions.hasOwnProperty(globalfunctions) && matches(globalfunctions)) {
-                added[globalfunctions] = true;
-                result.push(createNewProposal(vscode.CompletionItemKind.Function, globalfunctions, gmlGlobals.globalFunctions[globalfunctions], "method"));
+        for (const globalFunctions in gmlGlobals.globalFunctions) {
+            if (gmlGlobals.globalFunctions.hasOwnProperty(globalFunctions) && matches(globalFunctions)) {
+                added[globalFunctions] = true;
+                result.push(createNewProposal(vscode.CompletionItemKind.Function, globalFunctions, gmlGlobals.globalFunctions[globalFunctions], "method"));
             }
         }
 
-        for (const globalvariables in gmlGlobals.globalVariables) {
-            if (gmlGlobals.globalVariables.hasOwnProperty(globalvariables) && matches(globalvariables)) {
-                added[globalvariables] = true;
-                result.push(createNewProposal(vscode.CompletionItemKind.Variable, globalvariables, gmlGlobals.globalVariables[globalvariables]));
+        for (const globalVariables in gmlGlobals.globalVariables) {
+            if (gmlGlobals.globalVariables.hasOwnProperty(globalVariables) && matches(globalVariables)) {
+                added[globalVariables] = true;
+                result.push(createNewProposal(vscode.CompletionItemKind.Variable, globalVariables, gmlGlobals.globalVariables[globalVariables]));
             }
         }
 
@@ -89,6 +94,8 @@ export default class GmlCompletionProvider {
             }
         }
 
+        if(!includeWorkspaceCompletions) return result
+
         const text = document.getText();
 
         const variableMatch = /(?<=\bvar\s)\s*[a-zA-Z_][a-zA-Z0-9_]*/gm;
@@ -104,6 +111,8 @@ export default class GmlCompletionProvider {
 
         for(const document of vscode.workspace.textDocuments)
         {
+            if(!document.uri.path.endsWith(".gml")) continue
+
             const text = document.getText()
 
             const macroMatch = /#macro ([a-zA-Z_][a-zA-Z0-9_]*) ((?:[^\n](\\(\n|\r\n))?)+(?=\n|$))/g;
@@ -137,11 +146,11 @@ export default class GmlCompletionProvider {
             // }
         }
 
-        const commandCompletion = new vscode.CompletionItem('new');
-        commandCompletion.kind = vscode.CompletionItemKind.Keyword;
-        commandCompletion.insertText = 'new ';
-        commandCompletion.command = { command: 'editor.action.triggerSuggest', title: 'Re-trigger completions...' };
+        // const commandCompletion = new vscode.CompletionItem('new');
+        // commandCompletion.kind = vscode.CompletionItemKind.Keyword;
+        // commandCompletion.insertText = 'new ';
+        // commandCompletion.command = { command: 'editor.action.triggerSuggest', title: 'Re-trigger completions...' };
 
-        return Promise.resolve(result);
+        return result;
     }
 }

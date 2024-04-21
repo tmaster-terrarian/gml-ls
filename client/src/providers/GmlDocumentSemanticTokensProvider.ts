@@ -1,6 +1,6 @@
 /* eslint-disable */
 import * as vscode from "vscode";
-import * as gmlGlobals from "../gmlGlobals"
+import * as gmlGlobals from "./gmlGlobals"
 
 // #04de80 is very green
 
@@ -85,6 +85,9 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
 
             for(const document of vscode.workspace.textDocuments)
             {
+                if(document.uri.path.endsWith(".git")) continue
+                if(!document.uri.path.endsWith(".gml")) continue
+
                 const text = document.getText()
 
                 let macrodef = new RegExp("#macro\\s" + word + "\\b").exec(text)

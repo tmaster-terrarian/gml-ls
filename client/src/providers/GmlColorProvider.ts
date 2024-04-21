@@ -1,6 +1,7 @@
 /* eslint-disable */
 import * as vscode from "vscode";
-import * as gmlGlobals from "../gmlGlobals";
+import * as gmlGlobals from "./gmlGlobals";
+import GmlProvider from "./GmlProvider";
 
 const TagLiteral = (literal: string): vscode.Color =>
 {
@@ -35,16 +36,21 @@ const parseLiteral = (literal: string): vscode.Color =>
     }
 };
 
-export default class GmlColorProvider implements vscode.DocumentColorProvider {
-    provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]>
+export default class GmlColorProvider implements vscode.DocumentColorProvider, GmlProvider {
+    async provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.ColorInformation[]>
     {
-        const returns = [];
+        if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
+        if(!vscode.workspace.getConfiguration('gml-ls').get('enableColors', true)) return
+
+        const includeWorkspaceColors = vscode.workspace.getConfiguration('gml-ls').get('workspaceColors', true)
+
+        const returns: vscode.ColorInformation[] = [];
         const text = document.getText();
 
         const colorMatcher = /(#|\$)([a-f0-9]+)/gi;
         let colorMatch: RegExpExecArray = null;
-        let tokens = 0; const maxTokens = 10000;
-        while((colorMatch = colorMatcher.exec(text)) && tokens < maxTokens)
+        let tokens = 0; const maxTokens = 2;
+        while(colorMatch = colorMatcher.exec(text))
         {
             const position = document.positionAt(colorMatch.index);
             const wordRange = new vscode.Range(position, document.positionAt(colorMatch.index + colorMatch[0].length));
@@ -52,23 +58,30 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
 
             const prefix = document.getText(new vscode.Range(document.positionAt(0), wordRange.start));
 
-            if(/#macro\s\w+\s$/.test(prefix)) continue
+            if(/#macro\s\w+\s$/.test(prefix) && includeWorkspaceColors) continue
 
             tokens++;
+
+            // if(tokens == maxTokens)
+            // {
+            //     let userInput = await warnAboutTooDamnManyTokens()
+            //     if(!userInput || userInput.title == "Abort")
+            //         return returns;
+            // }
 
             returns.push(new vscode.ColorInformation(wordRange, parseLiteral(word)));
         }
 
         const makeRGBMatcher = /\bmake_colou?r_rgb\s*\(((\s*[0-9]+\s*,)+\s*[0-9]+)\s*\)/g;
         let makeRGBMatch: RegExpExecArray = null
-        while((makeRGBMatch = makeRGBMatcher.exec(text)) && tokens < maxTokens)
+        while(makeRGBMatch = makeRGBMatcher.exec(text))
         {
             const position = document.positionAt(makeRGBMatch.index);
             const wordRange = new vscode.Range(position, document.positionAt(makeRGBMatch.index + makeRGBMatch[0].length));
 
             const prefix = document.getText(new vscode.Range(document.positionAt(0), wordRange.start));
 
-            if(/#macro\s\w+\s$/.test(prefix)) continue
+            if(/#macro\s\w+\s$/.test(prefix) && includeWorkspaceColors) continue
 
             const col = makeRGBMatch[1].replaceAll(/\s+/g, "").split(",")
             returns.push(new vscode.ColorInformation(
@@ -76,18 +89,25 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
                 new vscode.Color(Number(col[0]) / 255, Number(col[1]) / 255, Number(col[2]) / 255, 1)
             ));
             tokens++;
+
+            // if(tokens == maxTokens)
+            // {
+            //     let userInput = await warnAboutTooDamnManyTokens()
+            //     if(!userInput || userInput.title == "Abort")
+            //         return returns;
+            // }
         }
 
         const makeHSVMatcher = /\bmake_colou?r_hsv\s*\(((\s*[0-9]+\s*,)+\s*[0-9]+)\s*\)/g;
         let makeHSVMatch: RegExpExecArray = null
-        while((makeHSVMatch = makeHSVMatcher.exec(text)) && tokens < maxTokens)
+        while(makeHSVMatch = makeHSVMatcher.exec(text))
         {
             const position = document.positionAt(makeHSVMatch.index);
             const wordRange = new vscode.Range(position, document.positionAt(makeHSVMatch.index + makeHSVMatch[0].length));
 
             const prefix = document.getText(new vscode.Range(document.positionAt(0), wordRange.start));
 
-            if(/#macro\s\w+\s$/.test(prefix)) continue
+            if(/#macro\s\w+\s$/.test(prefix) && includeWorkspaceColors) continue
 
             const hsv = makeHSVMatch[1].replaceAll(/\s+/g, "").split(",");
             const rgb = hsv2rgb(Number(hsv[0]) * 360/255, Number(hsv[1]), Number(hsv[2]));
@@ -96,11 +116,20 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
                 new vscode.Color(Number(rgb[0]) / 255, Number(rgb[1]) / 255, Number(rgb[2]) / 255, 1)
             ));
             tokens++;
+
+            // if(tokens == maxTokens)
+            // {
+            //     let userInput = await warnAboutTooDamnManyTokens()
+            //     if(!userInput || userInput.title == "Abort")
+            //         return returns;
+            // }
         }
+
+        if(!includeWorkspaceColors) return returns
 
         const wordPattern = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
         let wordMatch: RegExpExecArray = null;
-        while((wordMatch = wordPattern.exec(text)) && tokens < maxTokens)
+        while(wordMatch = wordPattern.exec(text))
         {
             const position = document.positionAt(wordMatch.index);
             const wordRange = new vscode.Range(position, document.positionAt(wordMatch.index + wordMatch[0].length));
@@ -113,11 +142,20 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
             {
                 returns.push(new vscode.ColorInformation(wordRange, entry.color));
                 tokens++;
+
+                if(tokens == maxTokens)
+                {
+                    let userInput = await warnAboutTooDamnManyTokens()
+                    if(userInput == undefined || userInput.title == "Abort")
+                        return returns;
+                }
             }
             else
             {
                 for(const document of vscode.workspace.textDocuments)
                 {
+                    if(!document.uri.path.endsWith(".gml")) continue
+
                     const text = document.getText();
 
                     const macrodef = new RegExp("#macro (" + word + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text);
@@ -156,6 +194,13 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
                     }
                 }
             }
+
+            // if(tokens == maxTokens)
+            // {
+            //     let userInput = await warnAboutTooDamnManyTokens()
+            //     if(userInput == undefined || userInput.title == "Abort")
+            //         return returns;
+            // }
         }
 
         return returns;
@@ -197,6 +242,24 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider {
 
         return returns;
     }
+}
+
+function warnAboutTooDamnManyTokens()
+{
+    return vscode.window.showWarningMessage(
+        `The Color Provider detected a very large amount of tokens in the current file`,
+        {
+            detail: "too many tokens",
+            modal: true
+        },
+        <vscode.MessageItem>{
+            title: "Abort",
+            isCloseAffordance: true
+        },
+        <vscode.MessageItem>{
+            title: "Parse Anyway",
+        }
+    )
 }
 
 function hsv2rgb(_h: number, _s: number, _v: number)
@@ -255,16 +318,7 @@ function hsv2rgb(_h: number, _s: number, _v: number)
     return [(rr+m)*255,(gg+m)*255,(bb+m)*255]
 }
 
-/**
- * Author: Alexei Kourbatov
- * 
- * Source code and example: https://www.kourbatov.com/faq/rgb2hsv.htm
- * 
- * License: https://www.kourbatov.com/faq/legal.htm
- * 
- * Involves some minor edits by bscit (tmaster-terrarian@github) to make the code compatible with Typescript
- */
-function rgb2hsv(r: number | string, g: number | string, b: number | string): number[]
+function rgb2hsv(r: number, g: number, b: number): number[]
 {
     let computedH = 0;
     let computedS = 0;

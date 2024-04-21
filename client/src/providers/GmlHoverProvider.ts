@@ -1,8 +1,8 @@
 /* eslint-disable */
-import * as gmlGlobals from "../gmlGlobals";
+import * as gmlGlobals from "./gmlGlobals";
 import * as vscode from "vscode";
 
-import { FunctionEntry } from "../gmlGlobals";
+import { FunctionEntry } from "./gmlGlobals";
 
 class MarkdownString extends vscode.MarkdownString
 {
@@ -25,8 +25,14 @@ const createMDString = (input: string, lang?: string): MarkdownString => {
     return md
 }
 
-export default class GmlHoverProvider {
-    public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+export default class GmlHoverProvider implements vscode.HoverProvider {
+    public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover>
+    {
+        if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
+        if(!vscode.workspace.getConfiguration('gml-ls').get('enableHover', true)) return
+
+        const includeWorkspaceHovers = vscode.workspace.getConfiguration('gml-ls').get('workspaceHovers', true)
+
         const wordRange = document.getWordRangeAtPosition(position);
         if (!wordRange) {
             return undefined;
@@ -99,13 +105,25 @@ export default class GmlHoverProvider {
                 return new vscode.Hover([
                     new MarkdownString().appendCodeblock(`-4`)
                 ], wordRange)
-            if(_type == "keyword")
+            if(_type == "keyword" || name.startsWith("c_"))
                 return undefined;
             return createHover(entry)
         }
 
+        let numberLiteral = /\b0(b[0-1]+|x[0-9a-fA-F]+|o[0-7]+)\b/.exec(name)
+        if(numberLiteral)
+        {
+            return new vscode.Hover([
+                new MarkdownString().appendCodeblock(`${Number(numberLiteral[0])}`)
+            ], wordRange)
+        }
+
+        if(!includeWorkspaceHovers) return undefined
+
         for(const document of vscode.workspace.textDocuments)
         {
+            if(!document.uri.path.endsWith(".gml")) continue
+
             const text = document.getText()
 
             let macrodef = new RegExp("#macro (" + name + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
@@ -116,20 +134,44 @@ export default class GmlHoverProvider {
                 ], wordRange)
             }
 
-            let gopbal = new RegExp("\\bglobal\\s*\\.(\\s*\\w+\\s*\\.\\s*)*(" + name + ")").exec(text)
-            if(gopbal)
-            {
-                return new vscode.Hover([
-                    new MarkdownString().appendCodeblock(`${gopbal[0]}`)
-                ], wordRange)
-            }
+            // let gopbal = new RegExp("\\bglobal\\s*\\.(\\s*\\w+\\s*\\.\\s*)*(" + name + ")").exec(text)
+            // if(gopbal)
+            // {
+            //     return new vscode.Hover([
+            //         new MarkdownString().appendCodeblock(`${gopbal[0]}`)
+            //     ], wordRange)
+            // }
 
             let functionMatch1 = new RegExp("(?<=\\bfunction\\s)\\s*" + name + "\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
-            let functionMatch2 = new RegExp("\\b" + name + "\\s*(=|:)\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
+            let functionMatch2 = new RegExp("\\b" + name + "\\s*(?:=|:)\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
             if(functionMatch1 || functionMatch2)
             {
+                const args = functionMatch1 ? functionMatch1[1] : functionMatch2[1]
+                const argsCleaned = args.replaceAll(/\s+/g, "").split(",") // ex. ["red", "green", "blue"] in make_color_rgb
+                let argstr = ""
+                for(var i = 0; i < argsCleaned.length; i++)
+                {
+                    const pair = argsCleaned[i].split("=", 2)
+
+                    if(pair[0] == "args")
+                        argstr += "..."
+                    argstr += pair[0]
+
+                    if(pair.length > 1)
+                    {
+                        let type = eval("typeof " + pair[1])
+                        argstr += (pair[0] == "args" ? "" : "?") + (type != "undefined" ? ": " + type : "")
+
+                        if(pair[0] == "args")
+                            argstr += "[]"
+                    }
+
+                    if(i < argsCleaned.length - 1)
+                        argstr += ", "
+                }
+
                 return new vscode.Hover([
-                    new MarkdownString().appendCodeblock(`\(${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "method") : (functionMatch2[3] === "constructor" ? "constructor" : "method")}) ${name}(${functionMatch1 ? functionMatch1[1] : functionMatch2[1]})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[3] === "constructor" ? ": " + name : "")}`, "typescript")
+                    new MarkdownString().appendCodeblock(`${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "(method)") : (functionMatch2[3] === "constructor" ? "constructor" : "(method)")} ${name}(${argstr})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[3] === "constructor" ? ": " + name : "")}`, "typescript")
                 ], wordRange)
             }
         }
@@ -141,14 +183,6 @@ export default class GmlHoverProvider {
         {
             return new vscode.Hover([
                 new MarkdownString().appendCodeblock(`var ${name}`)
-            ], wordRange)
-        }
-
-        let numberLiteral = /\b0(b[0-1]+|x[0-9a-fA-F]+|o[0-7]+)\b/.exec(name)
-        if(numberLiteral)
-        {
-            return new vscode.Hover([
-                new MarkdownString().appendCodeblock(`${Number(numberLiteral[0])}`)
             ], wordRange)
         }
 

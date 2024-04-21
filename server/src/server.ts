@@ -89,20 +89,64 @@ connection.onDidChangeTextDocument((params) => {
     // params.contentChanges describe the content changes to the document.
 });
 
-// The example settings
-interface ExampleSettings
+interface FunctionEntry {
+    description?: string,
+    documentationLink?: string,
+    signature?: string
+    parameters?: {
+        label: string,
+        type?: string,
+        documentation?: string
+    }[]
+    returns?: string,
+    detail?: string,
+    deprecated?: boolean,
+    color?: {red: number, green: number, blue: number, alpha: number},
+}
+
+interface Settings
 {
-    maxNumberOfProblems: number;
+    simpleMode: boolean
+    userGlobals: {
+        functions: { [x: string]: FunctionEntry }
+        macros: { [x: string]: FunctionEntry }
+    }
+    enableColors: boolean
+    workspaceColors: boolean
+    enableCompletions: boolean
+    workspaceCompletions: boolean
+    semanticTokens: boolean
+    enableHovers: boolean
+    workspaceHovers: boolean
+    enableReferences: boolean
+    workspaceReferences: boolean
+    workspaceDefinitions: boolean
+    renameSymbol: boolean
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: Settings = {
+    simpleMode: false,
+    userGlobals: {
+        functions: {},
+        macros: {},
+    },
+    enableColors: true,
+    workspaceColors: true,
+    enableCompletions: true,
+    workspaceCompletions: true,
+    semanticTokens: true,
+    enableHovers: true,
+    workspaceHovers: true,
+    enableReferences: true,
+    workspaceReferences: true,
+    workspaceDefinitions: true,
+    renameSymbol: true,
+};
+let globalSettings: Settings = defaultSettings;
 
 // Cache the settings of all open documents
-let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+let documentSettings: Map<string, Thenable<Settings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
     if (hasConfigurationCapability)
@@ -112,8 +156,8 @@ connection.onDidChangeConfiguration(change => {
     }
     else
     {
-        globalSettings = <ExampleSettings>(
-            (change.settings.gmlLanguageServer || defaultSettings)
+        globalSettings = <Settings>(
+            (change.settings["gml-ls"] || defaultSettings)
         );
     }
 
@@ -121,7 +165,7 @@ connection.onDidChangeConfiguration(change => {
     documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<Settings> {
     if (!hasConfigurationCapability)
     {
         return Promise.resolve(globalSettings);
@@ -189,6 +233,35 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         diagnostics.push(diagnostic);
     }
 
+    let badEmbeddedLanguageLiteralMatchRegex = /(\/\*\s*(\w+)\s*\*\/\s*@)(\")/g
+    let badEmbeddedLanguageLiteralMatch: RegExpExecArray | null;
+    while ((badEmbeddedLanguageLiteralMatch = badEmbeddedLanguageLiteralMatchRegex.exec(text))) {
+        problems++;
+        let diagnostic: Diagnostic = {
+            severity: DiagnosticSeverity.Warning,
+            range: {
+                start: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index),
+                end: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index + badEmbeddedLanguageLiteralMatch[0].length)
+            },
+            message: `embedded language strings should use single quotes`,
+            source: 'gml',
+            code: "string.badEmbeddedLanguageLiteral",
+        };
+        if (hasDiagnosticRelatedInformationCapability)
+        {
+            diagnostic.relatedInformation = [
+                {
+                    location: {
+                        uri: textDocument.uri,
+                        range: Object.assign({}, diagnostic.range)
+                    },
+                    message: `embedded language strings should use single quotes`
+                }
+            ]
+        }
+        diagnostics.push(diagnostic);
+    }
+
     // let structMemberMatchRegex = /\b[0-9]+\s*:/g
     // let structMemberMatch: RegExpExecArray | null;
     // while ((structMemberMatch = structMemberMatchRegex.exec(text))) {
@@ -249,35 +322,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     //     diagnostics.push(diagnostic);
     // }
 
-    let badEmbeddedLanguageLiteralMatchRegex = /(\/\*\s*(\w+)\s*\*\/\s*@)(\")/g
-    let badEmbeddedLanguageLiteralMatch: RegExpExecArray | null;
-    while ((badEmbeddedLanguageLiteralMatch = badEmbeddedLanguageLiteralMatchRegex.exec(text))) {
-        problems++;
-        let diagnostic: Diagnostic = {
-            severity: DiagnosticSeverity.Warning,
-            range: {
-                start: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index),
-                end: textDocument.positionAt(badEmbeddedLanguageLiteralMatch.index + badEmbeddedLanguageLiteralMatch[0].length)
-            },
-            message: `embedded language strings should use single quotes`,
-            source: 'gml',
-            code: "string.badEmbeddedLanguageLiteral",
-        };
-        if (hasDiagnosticRelatedInformationCapability)
-        {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `embedded language strings should use single quotes`
-                }
-            ]
-        }
-        diagnostics.push(diagnostic);
-    }
-
     // Send the computed diagnostics to VS Code.
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
@@ -288,36 +332,32 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 // This handler provides the initial list of the completion items.
-connection.onCompletion(
-    (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-        // The pass parameter contains the position of the text document in
-        // which code complete got requested. For the example we ignore this
-        // info and always provide the same completion items.
-        return [
-            {
-                label: '#macro',
-                data: "macro",
-                kind: CompletionItemKind.Constant
-            }
-        ];
-    }
-);
+connection.onCompletion((context: TextDocumentPositionParams): CompletionItem[] => {
+    // The pass parameter contains the position of the text document in
+    // which code complete got requested. For the example we ignore this
+    // info and always provide the same completion items.
+    return [
+        {
+            label: '#macro',
+            data: "macro",
+            kind: CompletionItemKind.Constant
+        }
+    ];
+});
 
 // This handler resolves additional information for the item selected in
 // the completion list.
-connection.onCompletionResolve(
-    (item: CompletionItem): CompletionItem => {
-        switch (item.data)
+connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+    switch (item.data)
+    {
+        case "macro":
         {
-            case "macro":
-            {
-                item.detail = 'Macro';
-                break;
-            }
+            item.detail = 'Macro';
+            break;
         }
-        return item;
     }
-);
+    return item;
+});
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
