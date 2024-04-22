@@ -262,6 +262,10 @@
       "name": "comment.line.double-slash.gml"
     },
     {
+      "match": "#(end)?region.*$",
+      "name": "comment.line.gml"
+    },
+    {
       "begin": "/\\*",
       "end": "\\*/",
       "name": "comment.block.gml"
@@ -342,7 +346,7 @@
       "name": "variable.other.constant.gml"
     },
     {
-      "match": "\\$|#[0-9a-fA-F]+",
+      "match": "(\\$|#)[0-9a-fA-F]+",
       "name": "string.color.gml"
     },
     {

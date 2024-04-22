@@ -3,6 +3,7 @@ import * as gmlGlobals from "./gmlGlobals";
 import * as vscode from "vscode";
 
 import { FunctionEntry } from "./gmlGlobals";
+import * as lib from "../../../lib/out/lib";
 
 export default class GmlCompletionProvider implements vscode.CompletionItemProvider {
     triggerCharacters = ['.'];
@@ -13,6 +14,7 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
         if(!vscode.workspace.getConfiguration('gml-ls').get('enableCompletions', true)) return
 
         const includeWorkspaceCompletions = vscode.workspace.getConfiguration('gml-ls').get('workspaceCompletions', true)
+        const includeResourceCompletions = vscode.workspace.getConfiguration('gml-ls').get('resourceCompletions', true)
 
         let result = [];
 
@@ -94,21 +96,53 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
             }
         }
 
-        if(!includeWorkspaceCompletions) return result
+        if(includeResourceCompletions)
+        {
+            const resources = lib.State.get<lib.ResourceList>("yypResources")
+            const arr = Array.from(resources.keys())
+            for(var i = 0; i < arr.length; i++)
+            {
+                if(matches(arr[i]))
+                {
+                    added[arr[i]] = true
+                    result.push(createNewProposal(vscode.CompletionItemKind.Enum, arr[i], resources.get(arr[i]).toFunctionEntry()));
+                }
+            }
+        }
 
         const text = document.getText();
 
+        if(/\b((global)?var|#macro|function|enum) +$/.test(text.slice(0, document.offsetAt(range.start))))
+        {
+            result = []
+
+            const wordMatch = /\w+/g
+            let match: RegExpExecArray = null;
+            while(match = wordMatch.exec(text))
+            {
+                const word = match[0];
+                if(!added[word])
+                {
+                    added[word] = true
+                    result.push(createNewProposal(vscode.CompletionItemKind.Text, word, null))
+                }
+            }
+
+            return result
+        }
+
         const variableMatch = /(?<=\bvar\s)\s*[a-zA-Z_][a-zA-Z0-9_]*/gm;
         let match: RegExpExecArray = null;
-        while (match = variableMatch.exec(text)) {
+        while((match = variableMatch.exec(text)) && includeWorkspaceCompletions) {
             const word = match[0];
-            if(position.line - document.positionAt(match.index).line > -1)
+            if(position.line - document.positionAt(match.index).line > 0)
                 if (!added[word]) {
                     added[word] = true;
                     result.push(createNewProposal(vscode.CompletionItemKind.Variable, word, null));
                 }
         }
 
+        if(includeWorkspaceCompletions)
         for(const document of vscode.workspace.textDocuments)
         {
             if(!document.uri.path.endsWith(".gml")) continue

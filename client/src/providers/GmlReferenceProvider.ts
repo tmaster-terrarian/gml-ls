@@ -1,6 +1,7 @@
 /* eslint-disable */
 import * as vscode from "vscode"
 import * as gmlGlobals from "./gmlGlobals"
+import * as lib from "../../../lib/out/lib";
 
 interface Test
 {
@@ -49,6 +50,7 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
         if(!vscode.workspace.getConfiguration('gml-ls').get('enableReferences', true)) return
 
         const includeWorkspaceReferences = vscode.workspace.getConfiguration('gml-ls').get('workspaceReferences', true)
+        const includeResourceReferences = vscode.workspace.getConfiguration('gml-ls').get('resourceReferences', true)
 
         const results = []
 
@@ -100,9 +102,11 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
             }
         ]
 
+        const resources = Array.from(lib.State.get<lib.ResourceList>("yypResources").keys())
+
         for(var i = 0; i < tests.length; i++)
         {
-            if(tests[i].test(prefix, suffix) || gmlGlobals.globalFunctions.hasOwnProperty(word) || gmlGlobals.globalVariables.hasOwnProperty(word) || gmlGlobals.constants.hasOwnProperty(word))
+            if(tests[i].test(prefix, suffix) || gmlGlobals.globalFunctions.hasOwnProperty(word) || gmlGlobals.globalVariables.hasOwnProperty(word) || gmlGlobals.constants.hasOwnProperty(word) || resources.includes(word))
             {
                 if(context.includeDeclaration)
                 {
@@ -157,7 +161,6 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
 
                 for(const document of documents)
                 {
-                    if(document.uri.path.endsWith(".git")) continue
                     if(!document.uri.path.endsWith(".gml")) continue
 
                     const text = document.getText()

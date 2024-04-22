@@ -1,6 +1,7 @@
 /* eslint-disable */
 import * as vscode from "vscode";
 import * as gmlGlobals from "./gmlGlobals"
+import * as lib from '../../../lib/out/lib';
 
 // #04de80 is very green
 
@@ -15,7 +16,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
     provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.SemanticTokens>
     {
         if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
-        if(!vscode.workspace.getConfiguration('gml-ls').get('semanticTokens', true)) return
+        if(!vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.enabled', true)) return
 
         const text = document.getText()
 
@@ -60,7 +61,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                 let _type = "variable"
                 if(type == "function")
                     _type = "function"
-                if(type == "variable" && vscode.workspace.getConfiguration('gml-ls').get('colorizeInstanceVariables', true))
+                if(type == "variable" && vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.instanceVariables', true))
                     modifiers.push('builtinLocal')
                 if(type == "constant")
                     modifiers = ["readonly"]
@@ -86,7 +87,6 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
 
             for(const document of vscode.workspace.textDocuments)
             {
-                if(document.uri.path.endsWith(".git")) continue
                 if(!document.uri.path.endsWith(".gml")) continue
 
                 const text = document.getText()
@@ -141,6 +141,15 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                         )
                     }
                     break
+                }
+
+                if(lib.State.get<lib.ResourceList>("yypResources").has(word) && vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.resources', true))
+                {
+                    tokensBuilder.push(
+                        wordRange,
+                        'variable',
+                        ['resource']
+                    )
                 }
             }
         }

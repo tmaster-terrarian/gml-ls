@@ -22,14 +22,9 @@ import GmlColorProvider from "./providers/GmlColorProvider";
 import {GmlReferenceProvider} from './providers/GmlReferenceProvider';
 import {GmlRenameProvider} from './providers/GmlReferenceProvider';
 
-let State: vscode.Memento = null
-
 export function activate(context: vscode.ExtensionContext)
 {
-	State = context.workspaceState
-	lib.CreateWorkspaceState(context.workspaceState).then(value => {
-		State = value
-	})
+	lib.CreateWorkspaceState(context.workspaceState)
 
 	// The server is implemented in node
 	const serverModule = context.asAbsolutePath(
@@ -71,7 +66,7 @@ export function activate(context: vscode.ExtensionContext)
 	}
 
 	const tokenTypes = ['class', 'type', 'enum', 'function', 'variable', 'number', 'string'];
-	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor', 'builtinLocal'];
+	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor', 'builtinLocal', 'resource'];
 	const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
 
 	context.subscriptions.push(vscode.languages.registerHoverProvider({ language: "gml" }, new GmlHoverProvider()));

@@ -2,17 +2,23 @@
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 
+import { FunctionEntry } from "../../client/out/providers/gmlGlobals"
+
 export let State: vscode.Memento = null
 
-export async function CreateWorkspaceState(newState: vscode.Memento): Promise<vscode.Memento>
+export function CreateWorkspaceState(state: vscode.Memento): vscode.Memento
 {
-    State = newState
+    workspace.findFiles("**/*.yyp").then(uris => {
+        workspace.fs.readFile(uris[0]).then(val => {
+            const yyp = <YYProject>JSON.parse(new TextDecoder().decode(val).replaceAll(/,(?=\s*(\}|\]))/g, "").replaceAll(/(?<=")%(?=\w)/g, ""))
+            state.update("yyp", yyp)
 
-	await State.update("yyp", JSON.parse(new TextDecoder().decode(await workspace.fs.readFile(await workspace.findFiles("**/*.yyp")[0])).replaceAll(/,(?=\s*(\}|\]))/g, "")))
+            state.update("yypResources", ResourceList.from(yyp.resources));
+        })
+    })
 
-    State.update("yypResources", State.get("yyp", null) !== null ? ResourceList.from((<YYProject>State.get("yyp")).resources) : "");
-
-    return State
+    State = state
+    return state
 }
 
 export class ResourceList extends Map<string, Resource>
@@ -22,19 +28,32 @@ export class ResourceList extends Map<string, Resource>
         const arr = Array.from(value)
         const list = new ResourceList()
         arr.forEach((value, i) => {
-            list.set(value.id.name, {
-                id: value.id.name,
-                yyPath: value.id.path,
-            })
+            list.set(value.id.name, new Resource(
+                value.id.name,
+                value.id.path,
+            ))
         })
         return list
     }
 }
 
-export interface Resource
+export class Resource
 {
-    id: string,
+    id: string
     yyPath: string
+
+    constructor(id: string, yyPath: string)
+    {
+        this.id = id
+        this.yyPath = yyPath
+    }
+
+    toFunctionEntry(): FunctionEntry
+    {
+        return {
+            detail: "(resource) " + this.id
+        }
+    }
 }
 
 /* FINISH: add a way to universally get workspace symbols from a cache that gets updated dynamically

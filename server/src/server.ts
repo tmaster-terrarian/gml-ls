@@ -116,7 +116,8 @@ interface Settings
     enableCompletions: boolean
     workspaceCompletions: boolean
     semanticTokens: boolean
-    colorizeInstanceVariables: boolean
+    ["colorize.instanceVariables"]: boolean
+    ["colorize.resources"]: boolean
     enableHovers: boolean
     workspaceHovers: boolean
     enableReferences: boolean
@@ -137,7 +138,8 @@ const defaultSettings: Settings = {
     enableCompletions: true,
     workspaceCompletions: true,
     semanticTokens: true,
-    colorizeInstanceVariables: true,
+    ["colorize.instanceVariables"]: true,
+    ["colorize.resources"]: true,
     enableHovers: true,
     workspaceHovers: true,
     enableReferences: true,
@@ -220,18 +222,18 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             source: 'gml',
             code: "macro.nameCollisionWarning"
         };
-        if (hasDiagnosticRelatedInformationCapability)
-        {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `${m[0]} is not all uppercase, name collisions are more likely to occur`
-                }
-            ]
-        }
+        // if (hasDiagnosticRelatedInformationCapability)
+        // {
+        //     diagnostic.relatedInformation = [
+        //         {
+        //             location: {
+        //                 uri: textDocument.uri,
+        //                 range: Object.assign({}, diagnostic.range)
+        //             },
+        //             message: `${m[0]} is not all uppercase, name collisions are more likely to occur`
+        //         }
+        //     ]
+        // }
         diagnostics.push(diagnostic);
     }
 
@@ -249,18 +251,18 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             source: 'gml',
             code: "string.badEmbeddedLanguageLiteral",
         };
-        if (hasDiagnosticRelatedInformationCapability)
-        {
-            diagnostic.relatedInformation = [
-                {
-                    location: {
-                        uri: textDocument.uri,
-                        range: Object.assign({}, diagnostic.range)
-                    },
-                    message: `embedded language strings should use single quotes`
-                }
-            ]
-        }
+        // if (hasDiagnosticRelatedInformationCapability)
+        // {
+        //     diagnostic.relatedInformation = [
+        //         {
+        //             location: {
+        //                 uri: textDocument.uri,
+        //                 range: Object.assign({}, diagnostic.range)
+        //             },
+        //             message: `embedded language strings should use single quotes`
+        //         }
+        //     ]
+        // }
         diagnostics.push(diagnostic);
     }
 

@@ -1,10 +1,12 @@
 import * as vscode from "vscode";
 import { Color } from "vscode";
+import * as lib from '../../../lib/out/lib';
 
-interface obj {}
+interface _ {}
 
 /* eslint-disable */
-export interface FunctionEntry extends obj {
+
+export interface FunctionEntry extends _ {
     description?: string,
     documentationLink?: string,
     signature?: string
@@ -235,7 +237,21 @@ export let globalFunctions: EntryList = {
             { label: 'y', type: "number", documentation: "" }
         ],
     },
-    draw_sprite_ext: {},
+    draw_sprite_ext: {
+        description: `Draws the given sprite and sub-image at a position within the game room, with transformations applied.`,
+        documentationLink: "Drawing/Sprites_And_Tiles/draw_sprite_ext",
+        parameters: [
+            { label: 'sprite', type: "SpriteAsset" },
+            { label: 'subimg', type: "number" },
+            { label: 'x', type: "number" },
+            { label: 'y', type: "number" },
+            { label: 'xscale', type: "number" },
+            { label: 'yscale', type: "number" },
+            { label: 'rot', type: "number" },
+            { label: 'color', type: "Color" },
+            { label: 'alpha', type: "number" },
+        ],
+    },
     draw_sprite_general: {},
     draw_sprite_part: {},
     draw_sprite_part_ext: {},
@@ -299,8 +315,8 @@ export let globalFunctions: EntryList = {
         ],
         returns: "Color",
     },
-},
-globalVariables: EntryList = {
+}
+export let globalVariables: EntryList = {
     async_load: {},
     browser_height: {},
     browser_width: {},
@@ -481,8 +497,8 @@ globalVariables: EntryList = {
     view_xview: {deprecated: true},
     view_yport: {deprecated: true},
     view_yview: {deprecated: true},
-},
-constants: EntryList = {
+}
+export let constants: EntryList = {
     _GMLINE_: {},
     _GMFILE_: {},
     _GMFUNCTION_: {},
@@ -1062,8 +1078,8 @@ constants: EntryList = {
     of_challen: {},
     ge_lose: {},
     buffer_text: {},
-},
-keywords: EntryList = {
+}
+export let keywords: EntryList = {
     noone: {
         detail: "-4"
     },

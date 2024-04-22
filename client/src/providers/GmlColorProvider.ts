@@ -47,7 +47,7 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider, G
         const returns: vscode.ColorInformation[] = [];
         const text = document.getText();
 
-        const colorMatcher = /(#|\$)([a-f0-9]+)/gi;
+        const colorMatcher = /(#|\$)([a-f0-9]+)\b/gi;
         let colorMatch: RegExpExecArray = null;
         let tokens = 0; const maxTokens = 2;
         while(colorMatch = colorMatcher.exec(text))
@@ -161,7 +161,7 @@ export default class GmlColorProvider implements vscode.DocumentColorProvider, G
                     const macrodef = new RegExp("#macro (" + word + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text);
                     if(macrodef)
                     {
-                        const match = /(#|\$)([a-f0-9]+)/i.exec(macrodef[2]);
+                        const match = /(#|\$)([a-f0-9]+)\b/i.exec(macrodef[2]);
                         if(match)
                         {
                             returns.push(new vscode.ColorInformation(wordRange, parseLiteral(match[0])));

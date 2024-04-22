@@ -3,6 +3,7 @@ import * as gmlGlobals from "./gmlGlobals";
 import * as vscode from "vscode";
 
 import { FunctionEntry } from "./gmlGlobals";
+import * as lib from "../../../lib/out/lib";
 
 class MarkdownString extends vscode.MarkdownString
 {
@@ -32,6 +33,7 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
         if(!vscode.workspace.getConfiguration('gml-ls').get('enableHover', true)) return
 
         const includeWorkspaceHovers = vscode.workspace.getConfiguration('gml-ls').get('workspaceHovers', true)
+        const includeResourceHovers = vscode.workspace.getConfiguration('gml-ls').get('resourceHovers', true)
 
         const wordRange = document.getWordRangeAtPosition(position);
         if (!wordRange) {
@@ -118,8 +120,7 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
             ], wordRange)
         }
 
-        if(!includeWorkspaceHovers) return undefined
-
+        if(includeWorkspaceHovers)
         for(const document of vscode.workspace.textDocuments)
         {
             if(!document.uri.path.endsWith(".gml")) continue
@@ -176,15 +177,25 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
             }
         }
 
-        const text = document.getText()
-
-        let vardef = new RegExp("\\bvar\\s+(" + name + ")\\b").exec(text)
-        if(vardef)
+        if(includeResourceHovers)
         {
-            return new vscode.Hover([
-                new MarkdownString().appendCodeblock(`var ${name}`)
-            ], wordRange)
+            const resources = lib.State.get<lib.ResourceList>("yypResources")
+            const arr = Array.from(resources.keys())
+            if(arr.includes(name))
+                return new vscode.Hover([
+                    new MarkdownString().appendCodeblock(`(resource) ${name}`)
+                ], wordRange)
         }
+
+        // const text = document.getText()
+
+        // let vardef = new RegExp("\\bvar\\s+(" + name + ")\\b").exec(text)
+        // if(vardef)
+        // {
+        //     return new vscode.Hover([
+        //         new MarkdownString().appendCodeblock(`var ${name}`)
+        //     ], wordRange)
+        // }
 
         return undefined;
     }

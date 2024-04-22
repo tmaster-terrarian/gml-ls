@@ -216,29 +216,47 @@
 					"default": true,
 					"markdownDescription": "Allow `Completions` to include workspace constants"
 				},
-				"gml-ls.semanticTokens": {
+				"gml-ls.resourceCompletions": {
+					"scope": "window",
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Allow `Completions` to include project resources"
+				},
+				"gml-ls.semanticTokens.enabled": {
 					"scope": "window",
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Enable `Semantic Token Colorization` for workspace constants\n\nRequires `editor.semanticHighlighting.enabled` to be set to `true`"
 				},
-				"gml-ls.colorizeInstanceVariables": {
+				"gml-ls.semanticTokens.instanceVariables": {
 					"scope": "window",
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Enable `Semantic Token Colorization` for built-in instance variables\n\nRequires `editor.semanticHighlighting.enabled` to be set to `true`"
 				},
+				"gml-ls.semanticTokens.resources": {
+					"scope": "window",
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Enable `Semantic Token Colorization` for project resources (objects, sprites, etc)\n\nRequires `editor.semanticHighlighting.enabled` to be set to `true`"
+				},
 				"gml-ls.enableHovers": {
 					"scope": "window",
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Allow color info to also be shown on workspace constants"
+					"markdownDescription": "Enable `Hovers` for built-in variables and constants"
 				},
 				"gml-ls.workspaceHovers": {
 					"scope": "window",
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Allow color info to also be shown on workspace constants"
+					"markdownDescription": "Allow `Hovers` to include workspace symbols outside of the current file"
+				},
+				"gml-ls.resourceHovers": {
+					"scope": "window",
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Allow `Hovers` to include project resources"
 				},
 				"gml-ls.enableReferences": {
 					"scope": "window",
@@ -251,6 +269,12 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Allow `Show References` to include workspace constants"
+				},
+				"gml-ls.resourceReferences": {
+					"scope": "window",
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Allow `Show References` to include project resources"
 				},
 				"gml-ls.workspaceGotoDefinition": {
 					"scope": "window",
@@ -290,7 +314,8 @@
 					"*.deprecated": {
 						"strikethrough": true
 					},
-					"*.builtinLocal": "#04de80"
+					"*.builtinLocal": "#04de80",
+					"*.resource": "#fab1e7"
 				}
 			},
 			"editor.definitionLinkOpensInPeek": false,
