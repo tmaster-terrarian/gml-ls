@@ -1,5 +1,4 @@
 {
-    "gml-ls.trace.server": "off",
     "json.schemas": [
         {
             "fileMatch": [
@@ -7,5 +6,5 @@
             ],
             "url": "./.vscode/globals-schema.json"
         }
-    ],
+    ]
 }

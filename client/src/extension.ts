@@ -2,6 +2,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
+import * as lib from '../../lib/out/lib'
 
 import * as gmlGlobals from "./providers/gmlGlobals"
 
@@ -21,11 +22,14 @@ import GmlColorProvider from "./providers/GmlColorProvider";
 import {GmlReferenceProvider} from './providers/GmlReferenceProvider';
 import {GmlRenameProvider} from './providers/GmlReferenceProvider';
 
-export let State: vscode.Memento = null
+let State: vscode.Memento = null
 
 export function activate(context: vscode.ExtensionContext)
 {
 	State = context.workspaceState
+	lib.CreateWorkspaceState(context.workspaceState).then(value => {
+		State = value
+	})
 
 	// The server is implemented in node
 	const serverModule = context.asAbsolutePath(
@@ -60,7 +64,7 @@ export function activate(context: vscode.ExtensionContext)
 		clientOptions
 	);
 
-	gmlGlobals.recompile()
+	gmlGlobals.recompile(true)
 
 	const workspaceData = {
 		getURIs: () => workspace.findFiles('**/*.gml', '**/datafiles/**'), // find all gml files that aren't in the included files directory
@@ -83,7 +87,6 @@ export function activate(context: vscode.ExtensionContext)
 
 			for(const doc of workspace.textDocuments)
 			{
-				if(document.uri.path.endsWith(".git")) continue
 				if(!document.uri.path.endsWith(".gml")) continue
 
 				const text = doc.getText()
@@ -142,40 +145,7 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(vscode.languages.registerReferenceProvider({ language: "gml" }, new GmlReferenceProvider()));
 	context.subscriptions.push(vscode.languages.registerRenameProvider({ language: "gml" }, new GmlRenameProvider()));
 
-	// load gamemaker project file
-	// this will allow an easy way to know what assets exist in the workspace
-	workspace.findFiles("**/*.yyp").then(uris => {
-		workspace.fs.readFile(uris[0]).then(arr => {
-			State.update("yyp", JSON.parse(new TextDecoder().decode(arr).replaceAll(/,(?=\s*(\}|\]))/g, "")))
-		})
-	})
-
-	//	FINISH: add a way to universally get workspace symbols from a cache that gets updated dynamically
-	//	
-	//	const files: GmlFile[]
-	//	
-	//	class GmlFile: {
-	//		symbols: Symbol[],
-	//		uri: Uri
-	//	}
-	//	
-	//	class Symbol: {
-	//		range: Range,
-	//		identifier: string,
-	//		type: SymbolType,
-	//		scopeRange?: Range
-	//	}
-	//	
-	//	enum SymbolType: {
-	//		LocalVariable = 0,
-	//		ScriptFunction = 1,
-	//		Macro = 2,
-	//		Parameter = 3
-	//	}
-
-	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
-		gmlGlobals.recompile()
-	}))
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(recompile))
 
 	// Start the client. This will also launch the server
 	client.start();
@@ -186,4 +156,9 @@ export function deactivate(): Thenable<void> | undefined {
 		return undefined;
 	}
 	return client.stop();
+}
+
+function recompile(event: vscode.ConfigurationChangeEvent)
+{
+	gmlGlobals.recompile(true)
 }

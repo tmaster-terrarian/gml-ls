@@ -19,39 +19,31 @@ export interface FunctionEntry extends obj {
     color?: {red: number, green: number, blue: number, alpha: number},
 }
 
-let firstCompilation = true
-
 class EntryList {
     [x: string]: FunctionEntry;
 }
 
 export function recompile(includeUserDefinitions = true, fixMissingValues = true)
 {
-    if(firstCompilation) compile()
+    compile(true)
 
     if(includeUserDefinitions)
     {
-        const userGlobals: { functions: EntryList, macros: EntryList } = vscode.workspace.getConfiguration("gml-ls").get("userGlobals", { functions: {}, macros: {} })
+        const userFunctions = vscode.workspace.getConfiguration("gml-ls.userGlobals").get("functions", <EntryList>{})
+        const userMacros = vscode.workspace.getConfiguration("gml-ls.userGlobals").get("macros", <EntryList>{})
 
         // base functions should take precedence over user-defined ones
-        Object.keys(userGlobals.functions).forEach(name => {
-            if(globalFunctions.hasOwnProperty[name]) return
-            globalFunctions[name] = userGlobals.functions[name]
-        })
+        globalFunctions = Object.assign(userFunctions, _globalFunctions)
 
-        Object.prototype.hasOwnProperty
-
-        // this is not the same for constants because those can technically be overriden in gamemaker, for some reason
-        globalFunctions = Object.assign(constants, <Record<string, FunctionEntry>>userGlobals.macros)
-
-        if(fixMissingValues) compile()
+        // this is not the same for constants because those can be overriden for some reason
+        constants = Object.assign(_constants, userMacros)
     }
+
+    if(fixMissingValues) compile()
 }
 
 function compile(initialCompile = false)
 {
-    if(initialCompile)
-        firstCompilation = false
     for(const e in globalFunctions)
     {
         const entry = globalFunctions[e]
@@ -60,9 +52,8 @@ function compile(initialCompile = false)
         if(!entry.signature)
             entry.signature = "()"
 
-        if(/color/.exec(e) && initialCompile) // add UK-style equivalent entry
+        if(/color/.exec(e) && initialCompile) // add UK entries
             globalFunctions[e.replace("color", "colour")] = entry
-
     }
     for(const e in globalVariables)
     {
@@ -76,7 +67,7 @@ function compile(initialCompile = false)
     }
 }
 
-export let globalFunctions: Record<string, FunctionEntry> = {
+export let globalFunctions: EntryList = {
     abs: {
         description: "Returns the absolute value of the input number",
         documentationLink: "Maths_And_Numbers/Number_Functions/abs",
@@ -309,7 +300,7 @@ export let globalFunctions: Record<string, FunctionEntry> = {
         returns: "Color",
     },
 },
-globalVariables: Record<string, FunctionEntry> = {
+globalVariables: EntryList = {
     async_load: {},
     browser_height: {},
     browser_width: {},
@@ -491,7 +482,7 @@ globalVariables: Record<string, FunctionEntry> = {
     view_yport: {deprecated: true},
     view_yview: {deprecated: true},
 },
-constants: Record<string, FunctionEntry> = {
+constants: EntryList = {
     _GMLINE_: {},
     _GMFILE_: {},
     _GMFUNCTION_: {},
@@ -1072,7 +1063,7 @@ constants: Record<string, FunctionEntry> = {
     ge_lose: {},
     buffer_text: {},
 },
-keywords: Record<string, FunctionEntry> = {
+keywords: EntryList = {
     noone: {
         detail: "-4"
     },
@@ -1106,3 +1097,6 @@ keywords: Record<string, FunctionEntry> = {
     pointer_invalid: {},
     pointer_null: {},
 };
+
+let _globalFunctions = Object.freeze(Object.assign({}, globalFunctions))
+let _constants = Object.freeze(Object.assign({}, constants))

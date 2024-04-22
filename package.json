@@ -1,6 +1,7 @@
 {
 	"name": "gml-ls",
 	"description": "A language provider for GameMaker Studio 2 (LTS and above)",
+	"publisher": "bscit",
 	"author": {
 		"name": "bscit",
 		"url": "https://bscit.dev"
@@ -17,6 +18,9 @@
 	"engines": {
 		"vscode": "^1.75.0"
 	},
+	"workspaceTrust": {
+		"request": "never"
+	},
 	"activationEvents": [],
 	"main": "./client/out/extension",
 	"contributes": {
@@ -27,7 +31,7 @@
 		],
 		"configuration": {
 			"type": "object",
-			"title": "config",
+			"title": "GML",
 			"properties": {
 				"gml-ls.trace.server": {
 					"scope": "window",
@@ -48,10 +52,6 @@
 				},
 				"gml-ls.userGlobals": {
 					"scope": "window",
-					"default": {
-						"functions": {},
-						"macros": {}
-					},
 					"type": "object",
 					"properties": {
 						"functions": {
@@ -179,9 +179,17 @@
 								},
 								"required": []
 							},
-							"description": "List of user-defined Script Functions"
+							"description": "List of user-defined Macros"
 						}
 					},
+					"default": {
+						"functions": {},
+						"macros": {}
+					},
+					"required": [
+						"functions",
+						"macros"
+					],
 					"markdownDescription": "Object containing any number of user-defined Script Functions and Macros, allowing one to add descriptions and documentation"
 				},
 				"gml-ls.enableColors": {

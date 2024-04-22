@@ -7,11 +7,9 @@
 		"rootDir": "src",
 		"sourceMap": true,
 		"moduleResolution": "Node",
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"composite": true
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test"],
-	"references": [
-		{ "path": "../lib" }
-	]
 }
