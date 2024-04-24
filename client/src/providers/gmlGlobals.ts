@@ -38,7 +38,7 @@ export function recompile(includeUserDefinitions = true, fixMissingValues = true
         globalFunctions = Object.assign(userFunctions, _globalFunctions)
 
         // this is not the same for constants because those can be overriden for some reason
-        constants = Object.assign(_constants, userMacros)
+        constants = Object.assign(Object.assign({}, _constants), userMacros)
     }
 
     if(fixMissingValues) compile()

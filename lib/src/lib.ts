@@ -3,12 +3,16 @@ import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 
 import { FunctionEntry } from "../../client/out/providers/gmlGlobals"
+import { VirtualTextDocument } from './common/textDocument';
 
 export let State: vscode.Memento = null
 
+export let yypLocation: vscode.Uri = null
+
 export function CreateWorkspaceState(state: vscode.Memento): vscode.Memento
 {
-    workspace.findFiles("**/*.yyp").then(uris => {
+    workspace.findFiles("**/*.yyp", "**/datafiles/**", 1).then(uris => {
+        yypLocation = vscode.Uri.file(uris[0].path.replace(/\/\w+.yyp/, ""))
         workspace.fs.readFile(uris[0]).then(val => {
             const yyp = <YYProject>JSON.parse(new TextDecoder().decode(val).replaceAll(/,(?=\s*(\}|\]))/g, "").replaceAll(/(?<=")%(?=\w)/g, ""))
             state.update("yyp", yyp)
@@ -16,6 +20,8 @@ export function CreateWorkspaceState(state: vscode.Memento): vscode.Memento
             state.update("yypResources", ResourceList.from(yyp.resources));
         })
     })
+
+    workspace.findFiles("**/*.gml", "**/datafiles/**")
 
     State = state
     return state
@@ -41,11 +47,13 @@ export class Resource
 {
     id: string
     yyPath: string
+    yyUri: vscode.Uri
 
     constructor(id: string, yyPath: string)
     {
         this.id = id
         this.yyPath = yyPath
+        this.yyUri = (vscode.Uri.file(yypLocation.path + "/" + yyPath))
     }
 
     toFunctionEntry(): FunctionEntry
@@ -56,7 +64,8 @@ export class Resource
     }
 }
 
-/* FINISH: add a way to universally get workspace symbols from a cache that gets updated dynamically
+/*
+FINISH: add a way to universally get workspace symbols from a cache that gets updated dynamically
 
 const files: GmlFile[]
 
@@ -82,6 +91,20 @@ export enum SymbolType
     Parameter = 3
 }
 */
+
+export async function getWorkspaceDocuments(uris: vscode.Uri[])
+{
+    const documents: VirtualTextDocument[] = []
+    const decoder = new TextDecoder()
+    for(var i = 0; i < uris.length; i++)
+    {
+        const uri = uris[i]
+        const uint8arr = await vscode.workspace.fs.readFile(uri)
+        const obj = new VirtualTextDocument(uri, "gml", decoder.decode(uint8arr))
+        documents.push(obj)
+    }
+    return documents
+}
 
 interface YYProject
 {

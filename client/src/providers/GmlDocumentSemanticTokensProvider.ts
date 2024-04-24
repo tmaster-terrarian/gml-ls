@@ -13,7 +13,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
         this.legend = legend;
     }
 
-    provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.SemanticTokens>
+    async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens>
     {
         if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
         if(!vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.enabled', true)) return
@@ -24,8 +24,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
 
         const wordPattern = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g
         let wordMatch: RegExpExecArray = null
-        let tokens = 0, maxTokens = 10000
-        while((wordMatch = wordPattern.exec(text)) && tokens < maxTokens)
+        while(wordMatch = wordPattern.exec(text))
         {
             const position = document.positionAt(wordMatch.index)
             const wordRange = new vscode.Range(position, document.positionAt(wordMatch.index + wordMatch[0].length))
@@ -44,8 +43,6 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                 /** @todo make this not ignore code inside of template strings */
             }
             if(cont) continue
-
-            tokens++
 
             let entry = gmlGlobals.globalFunctions.hasOwnProperty(word) ? gmlGlobals.globalFunctions[word] : null, type = "function"
             if(!entry) {entry = gmlGlobals.globalVariables.hasOwnProperty(word) ? gmlGlobals.globalVariables[word] : null; type = "variable"}
@@ -85,18 +82,31 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
             //     continue
             // }
 
+            // const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+
             for(const document of vscode.workspace.textDocuments)
             {
                 if(!document.uri.path.endsWith(".gml")) continue
 
                 const text = document.getText()
 
-                let macrodef = new RegExp("#macro\\s" + word + "\\b").exec(text)
+                let macrodef = new RegExp("#macro " + word + "\\b").exec(text)
                 if(macrodef)
                 {
                     tokensBuilder.push(
                         wordRange,
                         'variable',
+                        ['readonly']
+                    )
+                    break
+                }
+
+                let enumdef = new RegExp("\\benum\\s+" + word + "\\b").exec(text)
+                if(enumdef)
+                {
+                    tokensBuilder.push(
+                        wordRange,
+                        'enum',
                         ['readonly']
                     )
                     break
@@ -142,14 +152,14 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
                     }
                     break
                 }
-
-                if(lib.State.get<lib.ResourceList>("yypResources").has(word) && vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.resources', true))
+                else if(lib.State.get<lib.ResourceList>("yypResources").has(word) && vscode.workspace.getConfiguration('gml-ls').get('semanticTokens.resources', true))
                 {
                     tokensBuilder.push(
                         wordRange,
                         'variable',
                         ['resource']
                     )
+                    break
                 }
             }
         }

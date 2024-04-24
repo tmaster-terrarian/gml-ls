@@ -73,15 +73,19 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "gml" }, new GmlCompletionProvider(), "."));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "gml" }, new GmlDocumentSemanticTokensProvider(legend), legend));
 	context.subscriptions.push(vscode.languages.registerDefinitionProvider({ language: "gml" }, {
-		provideDefinition(document, position, token)
+		async provideDefinition(document, position, token)
 		{
 			if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
 			if(!vscode.workspace.getConfiguration('gml-ls').get('workspaceDefinitions', true)) return
 
 			const word = document.getText(document.getWordRangeAtPosition(position))
+			const prefix = document.getText().slice(0, document.offsetAt(document.getWordRangeAtPosition(position).start))
 
-			for(const doc of workspace.textDocuments)
+			const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+
+			for(const doc of documents)
 			{
+				if(document.uri.path.endsWith(".git")) continue
 				if(!document.uri.path.endsWith(".gml")) continue
 
 				const text = doc.getText()
@@ -91,7 +95,31 @@ export function activate(context: vscode.ExtensionContext)
 				{
 					let idx = macrodef.index;
 
-					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
+					return new vscode.Location(doc.uri, new vscode.Range(doc.positionAt(idx), doc.positionAt(idx + word.length)));
+				}
+
+				let enumdef = new RegExp("(?<=\\benum\\s)\\s*" + word + "\\b").exec(text)
+				if(enumdef)
+				{
+					let idx = enumdef.index;
+					for(var i = 0; i < 1000; i++)
+						if(text[idx] !== word[0])
+							idx++;
+						else break;
+
+					return new vscode.Location(doc.uri, new vscode.Range(doc.positionAt(idx), doc.positionAt(idx + word.length)));
+				}
+
+				let enummemberSource = new RegExp("(\\w+)\\s*\\.\\s*$").exec(prefix)
+				if(enummemberSource)
+				{
+					let enummemberdef = new RegExp("\\benum\\s+" + enummemberSource[1] + "\\s*\\{(\\n|.)*" + word + "(\\n|.)*?\\}").exec(text)
+					if(enummemberdef)
+					{
+						let idx = enummemberdef.index;
+
+						return new vscode.Location(doc.uri, new vscode.Range(doc.positionAt(idx), doc.positionAt(idx + word.length)));
+					}
 				}
 
 				let functiondef = new RegExp("((?<=\\bfunction\\s)\\s*" + word + "\\b|\\b" + word + "(?=\\s*=\\s*function\\s*\\())").exec(text)
@@ -103,35 +131,35 @@ export function activate(context: vscode.ExtensionContext)
 							idx++;
 						else break;
 
-					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
+					return new vscode.Location(doc.uri, new vscode.Range(doc.positionAt(idx), doc.positionAt(idx + word.length)));
 				}
 
-				let gobal = new RegExp("(?<=\\bglobal)\\s*\\.\\s*(" + word + ")\\s*=").exec(text)
-				if(gobal)
-				{
-					let idx = gobal.index;
-					for(var i = 0; i < 1000; i++)
-						if(text[idx] !== word[0])
-							idx++;
-						else break;
+				// let gobal = new RegExp("(?<=\\bglobal)\\s*\\.\\s*(" + word + ")\\s*=").exec(text)
+				// if(gobal)
+				// {
+				// 	let idx = gobal.index;
+				// 	for(var i = 0; i < 1000; i++)
+				// 		if(text[idx] !== word[0])
+				// 			idx++;
+				// 		else break;
 
-					return new vscode.Location(doc.uri, doc.getWordRangeAtPosition(doc.positionAt(idx)));
-				}
+				// 	return new vscode.Location(doc.uri, new vscode.Range(doc.positionAt(idx), doc.positionAt(idx + word.length)));
+				// }
 			}
 
 			const text = document.getText()
 
-			let vardef = new RegExp("(?<=\\bvar\\s)\\s*(" + word + ")\\b").exec(text)
-			if(vardef)
-			{
-				let idx = vardef.index;
-				for(var i = 0; i < 1000; i++)
-					if(text[idx] !== word[0])
-						idx++;
-					else break;
+			// let vardef = new RegExp("(?<=\\bvar\\s)\\s*(" + word + ")\\b").exec(text)
+			// if(vardef)
+			// {
+			// 	let idx = vardef.index;
+			// 	for(var i = 0; i < 1000; i++)
+			// 		if(text[idx] !== word[0])
+			// 			idx++;
+			// 		else break;
 
-				return new vscode.Location(document.uri, document.getWordRangeAtPosition(document.positionAt(idx)));
-			}
+			// 	return new vscode.Location(document.uri, document.getWordRangeAtPosition(document.positionAt(idx)));
+			// }
 
 			return null;
 		},

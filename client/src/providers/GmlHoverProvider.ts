@@ -27,7 +27,7 @@ const createMDString = (input: string, lang?: string): MarkdownString => {
 }
 
 export default class GmlHoverProvider implements vscode.HoverProvider {
-    public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover>
+    async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover>
     {
         if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
         if(!vscode.workspace.getConfiguration('gml-ls').get('enableHover', true)) return
@@ -45,6 +45,7 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
             let backidx = wordRange.start.translate({ characterDelta: -1 });
             backchar = backidx.character < 0 ? '' : document.getText(new vscode.Range(backidx, wordRange.start));
         }
+        const text = document.getText()
 
         let inWhitespacePattern = new RegExp("(\\/\\/.*" + name + ".*|\\/\\*.*" + name + ".*\\*\\/|\".*" + name + ".*[^\\\\]\"|'.*" + name + ".*[^\\\\]')", "g")
         let inWhitespace: RegExpExecArray = null
@@ -121,59 +122,71 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
         }
 
         if(includeWorkspaceHovers)
-        for(const document of vscode.workspace.textDocuments)
         {
-            if(!document.uri.path.endsWith(".gml")) continue
-
-            const text = document.getText()
-
-            let macrodef = new RegExp("#macro (" + name + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
-            if(macrodef)
+            const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+            for(const document of documents)
             {
-                return new vscode.Hover([
-                    new MarkdownString().appendCodeblock(`#macro ${name}: ${macrodef[2]}`)
-                ], wordRange)
-            }
+                if(!document.uri.path.endsWith(".gml")) continue
 
-            // let gopbal = new RegExp("\\bglobal\\s*\\.(\\s*\\w+\\s*\\.\\s*)*(" + name + ")").exec(text)
-            // if(gopbal)
-            // {
-            //     return new vscode.Hover([
-            //         new MarkdownString().appendCodeblock(`${gopbal[0]}`)
-            //     ], wordRange)
-            // }
+                const text = document.getText()
 
-            let functionMatch1 = new RegExp("(?<=\\bfunction\\s)\\s*" + name + "\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
-            let functionMatch2 = new RegExp("\\b" + name + "\\s*(?:=|:)\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
-            if(functionMatch1 || functionMatch2)
-            {
-                const args = functionMatch1 ? functionMatch1[1] : functionMatch2[1]
-                const argsCleaned = args.replaceAll(/\s+/g, "").split(",") // ex. ["red", "green", "blue"] in make_color_rgb
-                let argstr = ""
-                for(var i = 0; i < argsCleaned.length; i++)
+                let macrodef = new RegExp("#macro (" + name + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
+                if(macrodef)
                 {
-                    const pair = argsCleaned[i].split("=", 2)
-
-                    if(pair[0] == "args")
-                        argstr += "..."
-                    argstr += pair[0]
-
-                    if(pair.length > 1)
-                    {
-                        let type = eval("typeof " + pair[1])
-                        argstr += (pair[0] == "args" ? "" : "?") + (type != "undefined" ? ": " + type : "")
-
-                        if(pair[0] == "args")
-                            argstr += "[]"
-                    }
-
-                    if(i < argsCleaned.length - 1)
-                        argstr += ", "
+                    return new vscode.Hover([
+                        new MarkdownString().appendCodeblock(`#macro ${name}: ${macrodef[2]}`)
+                    ], wordRange)
                 }
 
-                return new vscode.Hover([
-                    new MarkdownString().appendCodeblock(`${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "(method)") : (functionMatch2[3] === "constructor" ? "constructor" : "(method)")} ${name}(${argstr})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[3] === "constructor" ? ": " + name : "")}`, "typescript")
-                ], wordRange)
+                let enumdef = new RegExp("\\benum\\s+(" + name + ")\\s*\\{\\s*((\\s*[a-zA-Z_][a-zA-Z0-9_]*(\\s*,)?)+)\\s*\\}").exec(text)
+                if(enumdef)
+                {
+                    // let entries = enumdef[2].replaceAll(/\s+/g, "").split(",")
+                    return new vscode.Hover([
+                        new MarkdownString().appendCodeblock(`enum ${name}`)
+                    ], wordRange)
+                }
+
+                // let gopbal = new RegExp("\\bglobal\\s*\\.(\\s*\\w+\\s*\\.\\s*)*(" + name + ")").exec(text)
+                // if(gopbal)
+                // {
+                //     return new vscode.Hover([
+                //         new MarkdownString().appendCodeblock(`${gopbal[0]}`)
+                //     ], wordRange)
+                // }
+
+                let functionMatch1 = new RegExp("(?<=\\bfunction\\s)\\s*" + name + "\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
+                let functionMatch2 = new RegExp("\\b" + name + "\\s*(?:=|:)\\s*function\\s*\\((.*)\\)\\s*(constructor)?").exec(text);
+                if(functionMatch1 || functionMatch2)
+                {
+                    const args = functionMatch1 ? functionMatch1[1] : functionMatch2[1]
+                    const argsCleaned = args.replaceAll(/\s+/g, "").split(",") // ex. ["red", "green", "blue"] in make_color_rgb
+                    let argstr = ""
+                    for(var i = 0; i < argsCleaned.length; i++)
+                    {
+                        const pair = argsCleaned[i].split("=", 2)
+
+                        if(pair[0] == "args")
+                            argstr += "..."
+                        argstr += pair[0]
+
+                        if(pair.length > 1)
+                        {
+                            let type = eval("typeof " + pair[1])
+                            argstr += (pair[0] == "args" ? "" : "?") + (type != "undefined" ? ": " + type : "")
+
+                            if(pair[0] == "args")
+                                argstr += "[]"
+                        }
+
+                        if(i < argsCleaned.length - 1)
+                            argstr += ", "
+                    }
+
+                    return new vscode.Hover([
+                        new MarkdownString().appendCodeblock(`${functionMatch1 ? (functionMatch1[2] === "constructor" ? "constructor" : "(method)") : (functionMatch2[3] === "constructor" ? "constructor" : "(method)")} ${name}(${argstr})${functionMatch1 ? (functionMatch1[2] === "constructor" ? ": " + name : "") : (functionMatch2[3] === "constructor" ? ": " + name : "")}`, "typescript")
+                    ], wordRange)
+                }
             }
         }
 

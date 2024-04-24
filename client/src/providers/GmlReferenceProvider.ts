@@ -66,7 +66,7 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
         const whitespaceTests: Test[] = [
             {
                 // comments
-                test: (prefix, suffix) => /\/\/\N*$/.test(prefix) || /\/\*(?:.(?!\*\/))*$/s.test(prefix),
+                test: (prefix, suffix) => /\/\/[^\n]*$/.test(prefix) || /\/\*(?:.(?!\*\/))*$/s.test(prefix),
             },
             {
                 // strings
@@ -89,7 +89,7 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
                     }
                 }
             }
-        ]
+        ];
 
         /** @todo make this not ignore code inside of template strings */
 
@@ -98,15 +98,18 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
                 test: (prefix, suffix) => /#macro $/.test(prefix),
             },
             {
+                test: (prefix, suffix) => /\benum\s+$/.test(prefix),
+            },
+            {
                 test: (prefix, suffix) => /\bfunction\s+$/.test(prefix),
-            }
-        ]
+            },
+        ];
 
-        const resources = Array.from(lib.State.get<lib.ResourceList>("yypResources").keys())
+        const resources = lib.State.get<lib.ResourceList>("yypResources")
 
         for(var i = 0; i < tests.length; i++)
         {
-            if(tests[i].test(prefix, suffix) || gmlGlobals.globalFunctions.hasOwnProperty(word) || gmlGlobals.globalVariables.hasOwnProperty(word) || gmlGlobals.constants.hasOwnProperty(word) || resources.includes(word))
+            if(tests[i].test(prefix, suffix) || gmlGlobals.globalFunctions.hasOwnProperty(word) || gmlGlobals.globalVariables.hasOwnProperty(word) || gmlGlobals.constants.hasOwnProperty(word) || (includeResourceReferences && resources.has(word)))
             {
                 if(context.includeDeclaration)
                 {
@@ -153,11 +156,9 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
                     return results
                 }
 
-                if(!includeWorkspaceReferences) return null
+                if(!(includeWorkspaceReferences || (includeResourceReferences && resources.has(word)))) return null
 
-                const documents = await decode(await vscode.workspace.findFiles("**/{objects,scripts,rooms,sequences}/**/*.gml"))
-
-                // const documents = vscode.workspace.textDocuments
+                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
 
                 for(const document of documents)
                 {
@@ -219,6 +220,9 @@ export class GmlRenameProvider implements vscode.RenameProvider
                 test: (prefix, suffix) => /#macro $/.test(prefix),
             },
             {
+                test: (prefix, suffix) => /\benum\s+$/.test(prefix),
+            },
+            {
                 test: (prefix, suffix) => /\bfunction\s+$/.test(prefix),
             }
         ]
@@ -227,7 +231,7 @@ export class GmlRenameProvider implements vscode.RenameProvider
         {
             if(tests[i].test(prefix, suffix))
             {
-                const documents = await decode(await vscode.workspace.findFiles("**/{objects,scripts,rooms,sequences}/**/*.gml"))
+                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
 
                 for(const document of documents)
                 {

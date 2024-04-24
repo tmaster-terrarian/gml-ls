@@ -5,9 +5,13 @@ import * as vscode from "vscode";
 import { FunctionEntry } from "./gmlGlobals";
 import * as lib from "../../../lib/out/lib";
 
+interface EnumCompletionList
+{
+    readonly entries: string[]
+}
+
 export default class GmlCompletionProvider implements vscode.CompletionItemProvider {
     triggerCharacters = ['.'];
-    globals = {}
     async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.CompletionItem[]>
     {
         if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return
@@ -19,11 +23,16 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
         let result = [];
 
         let range = document.getWordRangeAtPosition(position);
-        const prefix = range ? document.getText(range) : '';
+        const _prefix = range ? document.getText(range) : '';
         if (!range) {
             range = new vscode.Range(position, position);
         }
         const added = {};
+
+        const text = document.getText();
+        const prefix = text.slice(0, document.offsetAt(range.start))
+
+        const enums: { [x: string]: EnumCompletionList } = {}
 
         const createNewProposal = (kind: vscode.CompletionItemKind, name: string, entry: FunctionEntry, type = undefined) => {
             const proposal = new vscode.CompletionItem(name);
@@ -65,7 +74,7 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
             return proposal;
         };
         const matches = (name) => {
-            return prefix.length === 0 || name.length >= prefix.length && name.substr(0, prefix.length) === prefix;
+            return _prefix.length === 0 || name.length >= _prefix.length && name.substr(0, _prefix.length) === _prefix;
         };
 
         for (const globalFunctions in gmlGlobals.globalFunctions) {
@@ -110,8 +119,6 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
             }
         }
 
-        const text = document.getText();
-
         if(/\b((global)?var|#macro|function|enum) +$/.test(text.slice(0, document.offsetAt(range.start))))
         {
             result = []
@@ -142,8 +149,10 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
                 }
         }
 
+        const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+
         if(includeWorkspaceCompletions)
-        for(const document of vscode.workspace.textDocuments)
+        for(const document of documents)
         {
             if(!document.uri.path.endsWith(".gml")) continue
 
@@ -158,6 +167,22 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
                     result.push(createNewProposal(vscode.CompletionItemKind.Constant, word, {
                         detail: "#macro " + word,
                         description: `value:\n\`\`\`\n${match[2]}\n\`\`\``
+                    }));
+                }
+            }
+
+            const enumMatch = /\benum\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\{\s*((\s*[a-zA-Z_][a-zA-Z0-9_]*(\s*,)?)+)\s*\}/g;
+            match = null;
+            while (match = enumMatch.exec(text)) {
+                const word = match[1];
+                if (!added[word]) {
+                    added[word] = true;
+                    enums[word] = {
+                        entries: match[2].replaceAll(/\s+/g, "").split(",")
+                    }
+                    result.push(createNewProposal(vscode.CompletionItemKind.Enum, word, {
+                        detail: "enum " + word,
+                        signature: "enum " + word
                     }));
                 }
             }
@@ -184,6 +209,22 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
         // commandCompletion.kind = vscode.CompletionItemKind.Keyword;
         // commandCompletion.insertText = 'new ';
         // commandCompletion.command = { command: 'editor.action.triggerSuggest', title: 'Re-trigger completions...' };
+
+        let enumMemberMatch = /([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\.\s*$)/.exec(prefix)
+        if(enumMemberMatch && enums.hasOwnProperty(enumMemberMatch[1]))
+        {
+            result = []
+
+            for(var i = 0; i < enums[enumMemberMatch[1]].entries.length; i++)
+            {
+                const member = enums[enumMemberMatch[1]].entries[i]
+                result.push(createNewProposal(vscode.CompletionItemKind.EnumMember, member, {
+                    detail: enumMemberMatch[1] + "." + member + " = " + i
+                }))
+            }
+
+            return result
+        }
 
         return result;
     }
