@@ -172,7 +172,7 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
                     {
                         const wordRange = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + word.length))
 
-                        let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*.*" + word + ".*\\*\\/|\".*" + word + ".*[^\\\\]\"|'.*" + word + ".*[^\\\\]')", "g")
+                        let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*(.|\\n)*" + word + "(.|\\n)*\\*\\/|\".*" + word + ".*[^\\\\]\"|'.*" + word + ".*[^\\\\]')", "g")
                         let inWhitespace: RegExpExecArray = null
                         let cont = false
                         while(inWhitespace = inWhitespacePattern.exec(document.getText()))
@@ -245,7 +245,7 @@ export class GmlRenameProvider implements vscode.RenameProvider
                     {
                         const wordRange = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length))
 
-                        let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*.*" + word + ".*\\*\\/|\".*" + word + ".*[^\\\\]\"|'.*" + word + ".*[^\\\\]')", "g")
+                        let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*(.|\\n)*" + word + "(.|\\n)*\\*\\/|\".*" + word + ".*[^\\\\]\"|'.*" + word + ".*[^\\\\]')", "g")
                         let inWhitespace: RegExpExecArray = null
                         let cont = false
                         while(inWhitespace = inWhitespacePattern.exec(document.getText()))

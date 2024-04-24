@@ -346,12 +346,12 @@
       "name": "variable.other.constant.gml"
     },
     {
-      "match": "(\\$|#)[0-9a-fA-F]+",
-      "name": "string.color.gml"
-    },
-    {
       "match": "(?i)\\b(self|other|(global)?var|local|enum|static|constructor|function|new|as|of|in)\\b",
       "name": "constant.language.gml"
+    },
+    {
+      "match": "(?<=#define )[a-zA-Z_][a-zA-Z_0-9]*\\b",
+      "name": "support.function.gml"
     },
     {
       "match": "\\b[a-zA-Z_][a-zA-Z_0-9]*?(?=\\s*?\\=\\s*?function\\b)",
@@ -360,6 +360,10 @@
     {
       "match": "\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b(?=\\s*?\\()",
       "name": "support.function.gml"
+    },
+    {
+      "match": "(\\$|#)[0-9a-fA-F]+\\b",
+      "name": "string.color.gml"
     },
     {
       "match": "(?<=\\bself\\.)\\s*?\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b",

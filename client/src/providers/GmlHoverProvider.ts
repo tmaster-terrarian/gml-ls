@@ -47,7 +47,7 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
         }
         const text = document.getText()
 
-        let inWhitespacePattern = new RegExp("(\\/\\/.*" + name + ".*|\\/\\*.*" + name + ".*\\*\\/|\".*" + name + ".*[^\\\\]\"|'.*" + name + ".*[^\\\\]')", "g")
+        let inWhitespacePattern = new RegExp("(\\/\\/.*" + name + ".*|\\/\\*(.|\\n)*" + name + "(.|\\n)*\\*\\/|\".*" + name + ".*[^\\\\]\"|'.*" + name + ".*[^\\\\]')", "g")
         let inWhitespace: RegExpExecArray = null
         while(inWhitespace = inWhitespacePattern.exec(document.getText()))
         {

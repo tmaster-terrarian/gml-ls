@@ -30,7 +30,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
             const wordRange = new vscode.Range(position, document.positionAt(wordMatch.index + wordMatch[0].length))
             const word = wordMatch[0]
 
-            let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*.*" + word + ".*\\*\\/|\".*" + word + ".*[^\\\\]\"|'.*" + word + ".*[^\\\\]')", "g")
+            let inWhitespacePattern = new RegExp("(\\/\\/.*" + word + ".*|\\/\\*(.|\\n)*" + word + "(.|\\n)*\\*\\/|\".*" + word + ".*?[^\\\\]\"|'.*" + word + ".*?[^\\\\]'|\\benum \\w+\\s*\\{(.|\\n)*" + word + "(.|\\n)*?\\})", "g")
             let inWhitespace: RegExpExecArray = null
             let cont = false
             while(inWhitespace = inWhitespacePattern.exec(text))
