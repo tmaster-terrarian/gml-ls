@@ -126,10 +126,39 @@ export let globalFunctions: EntryList = {
         ],
         returns: "number",
     },
-    draw_arrow: {},
-    draw_button: {},
-    draw_circle: {},
-    draw_circle_color: {},
+    draw_arrow: {
+        description: "Draw an arrow from point `(x1, y1)` to point `(x2, y2)`",
+        documentationLink: "Drawing/Basic_Forms/draw_arrow",
+        parameters: [
+            { label: "x1", type: "number", documentation: "The x coordinate of the start of the line." },
+            { label: "y1", type: "number", documentation: "The y coordinate of the start of the line." },
+            { label: "y2", type: "number", documentation: "The x coordinate of the end of the line (where the arrowhead ends)." },
+            { label: "x2", type: "number", documentation: "The y coordinate of the end of the line (where the arrowhead ends)." },
+            { label: "size", type: "number", documentation: "The length of the arrow in pixels." },
+        ]
+    },
+    draw_circle: {
+        description: "Draw a circle at position `(x, y)` with radius `r`",
+        documentationLink: "Drawing/Basic_Forms/draw_circle",
+        parameters: [
+            { label: "x", type: "number", documentation: "The x coordinate of the center of the circle." },
+            { label: "y", type: "number", documentation: "The y coordinate of the center of the circle." },
+            { label: "r", type: "number", documentation: "The circle's radius (length from its center to its edge)" },
+            { label: "outline", type: "boolean", documentation: "Whether the circle is drawn filled (`false`) or as a one pixel wide outline (`true`)." },
+        ]
+    },
+    draw_circle_color: {
+        description: "Draw a colored circle at position `(x, y)` with radius `r`",
+        documentationLink: "Drawing/Basic_Forms/draw_circle_colour",
+        parameters: [
+            { label: "x", type: "number", documentation: "The x coordinate of the center of the circle." },
+            { label: "y", type: "number", documentation: "The y coordinate of the center of the circle." },
+            { label: "r", type: "number", documentation: "The circle's radius (length from its center to its edge)" },
+            { label: "col1", type: "Color", documentation: "The colour at the center of the circle." },
+            { label: "col2", type: "Color", documentation: "The colour at the edge of the circle." },
+            { label: "outline", type: "boolean", documentation: "Whether the circle is drawn filled (`false`) or as a one pixel wide outline (`true`)." },
+        ]
+    },
     draw_clear: {
         description: `Clears the entire screen and fills it with the color (fully opaque)
         <br>Only works within an instance draw event
@@ -211,13 +240,25 @@ export let globalFunctions: EntryList = {
     draw_roundrect_color_ext: {},
     draw_roundrect_ext: {},
     draw_self: {},
-    draw_set_alpha: {},
+    draw_set_alpha: {
+        description: `Sets the global draw alpha to the input value, from \`0-1\``,
+        documentationLink: "Drawing/Colour_And_Alpha/draw_set_alpha",
+        parameters: [
+            { label: "alpha", type: "number", documentation: "The alpha to set (between 0 and 1)" }
+        ]
+    },
     draw_set_alpha_test: {},
     draw_set_alpha_test_ref_value: {},
     draw_set_blend_mode: {},
     draw_set_blend_mode_ext: {},
     draw_set_circle_precision: {},
-    draw_set_color: {},
+    draw_set_color: {
+        description: `Sets the global draw color to the input value, from \`0-1\``,
+        documentationLink: "Drawing/Colour_And_Alpha/draw_set_colour",
+        parameters: [
+            { label: "col", type: "Color", documentation: "The color to set" }
+        ]
+    },
     draw_set_color_write_enable: {},
     draw_set_font: {},
     draw_set_halign: {},
@@ -315,6 +356,35 @@ export let globalFunctions: EntryList = {
         ],
         returns: "Color",
     },
+    variable_instance_exists: {},
+    variable_instance_get_names: {},
+    variable_instance_names_count: {},
+    variable_instance_get: {},
+    variable_instance_set: {},
+    variable_global_exists: {},
+    variable_global_get: {},
+    variable_global_set: {},
+    nameof: {},
+    typeof: {},
+    method: {},
+    method_get_self: {},
+    method_get_index: {},
+    method_call: {},
+    struct_exists: {},
+    struct_get: {},
+    struct_set: {},
+    struct_remove: {},
+    struct_get_names: {},
+    struct_names_count: {},
+    is_instanceof: {},
+    static_get: {},
+    static_set: {},
+    instanceof: {},
+    struct_foreach: {},
+    struct_get_from_hash: {},
+    struct_set_from_hash: {},
+    variable_get_hash: {},
+    variable_clone: {},
 }
 export let globalVariables: EntryList = {
     async_load: {},
