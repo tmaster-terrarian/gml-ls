@@ -2,24 +2,9 @@ import * as vscode from "vscode";
 import { Color } from "vscode";
 import * as lib from '../../../lib/out/lib';
 
-interface _ {}
-
 /* eslint-disable */
 
-export interface FunctionEntry extends _ {
-    description?: string,
-    documentationLink?: string,
-    signature?: string
-    parameters?: {
-        label: string,
-        type?: string,
-        documentation?: string
-    }[]
-    returns?: string,
-    detail?: string,
-    deprecated?: boolean,
-    color?: {red: number, green: number, blue: number, alpha: number},
-}
+export interface FunctionEntry extends lib.FunctionEntry {}
 
 class EntryList {
     [x: string]: FunctionEntry;
@@ -65,7 +50,9 @@ function compile(initialCompile = false)
     for(const e in constants)
     {
         const entry = constants[e]
-        
+
+        if(/gray$/.exec(e) && initialCompile) // add UK entries
+            constants[e.replace("gray", "grey")] = entry
     }
 }
 

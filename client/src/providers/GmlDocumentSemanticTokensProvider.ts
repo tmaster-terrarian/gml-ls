@@ -3,8 +3,6 @@ import * as vscode from "vscode";
 import * as gmlGlobals from "./gmlGlobals"
 import * as lib from '../../../lib/out/lib';
 
-// #04de80 is very green
-
 export default class GmlDocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     legend: vscode.SemanticTokensLegend
 
@@ -82,7 +80,7 @@ export default class GmlDocumentSemanticTokensProvider implements vscode.Documen
             //     continue
             // }
 
-            // const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+            // const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
 
             for(const document of vscode.workspace.textDocuments)
             {

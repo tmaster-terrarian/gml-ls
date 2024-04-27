@@ -318,7 +318,7 @@
       "name": "keyword.control.gml"
     },
     {
-      "match": "(?<=\\: )\\b(?:object|Color|(AnimationCurve|Extension|Font|Object|ParticleSystem|Path|Room|Script|Sequence|Shader|Sound|Sprite|TileSet|Timeline)Asset)\\b",
+      "match": "(?<=\\: )[A-Z][a-z0-9_]*\\b",
       "name": "support.type.gml"
     },
     {
@@ -364,6 +364,10 @@
     {
       "match": "(\\$|#)[0-9a-fA-F]+\\b",
       "name": "string.color.gml"
+    },
+    {
+      "match": "(?<=\\bglobal\\.)\\s*?\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b",
+      "name": "support.variable.local.gml"
     },
     {
       "match": "(?<=\\bself\\.)\\s*?\\b[a-zA-Z_][a-zA-Z_0-9]*?\\b",

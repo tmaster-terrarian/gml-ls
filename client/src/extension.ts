@@ -22,10 +22,10 @@ import GmlColorProvider from "./providers/GmlColorProvider";
 import {GmlReferenceProvider} from './providers/GmlReferenceProvider';
 import {GmlRenameProvider} from './providers/GmlReferenceProvider';
 
+let wuhoh: vscode.StatusBarItem = null
+
 export function activate(context: vscode.ExtensionContext)
 {
-	lib.CreateWorkspaceState(context.workspaceState)
-
 	// The server is implemented in node
 	const serverModule = context.asAbsolutePath(
 		path.join('server', 'out', 'server.js')
@@ -69,6 +69,7 @@ export function activate(context: vscode.ExtensionContext)
 	const tokenModifiers = ['declaration', 'readonly', 'local', 'global', 'static', 'definition', 'deprecated', 'defaultLibrary', 'constructor', 'builtinLocal', 'resource'];
 	const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
 
+
 	context.subscriptions.push(vscode.languages.registerHoverProvider({ language: "gml" }, new GmlHoverProvider()));
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "gml" }, new GmlCompletionProvider(), "."));
 	context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "gml" }, new GmlDocumentSemanticTokensProvider(legend), legend));
@@ -81,7 +82,7 @@ export function activate(context: vscode.ExtensionContext)
 			const word = document.getText(document.getWordRangeAtPosition(position))
 			const prefix = document.getText().slice(0, document.offsetAt(document.getWordRangeAtPosition(position).start))
 
-			const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+			const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
 
 			for(const doc of documents)
 			{
@@ -170,8 +171,31 @@ export function activate(context: vscode.ExtensionContext)
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(recompile))
 
-	// Start the client. This will also launch the server
-	client.start();
+	wuhoh = vscode.window.createStatusBarItem("projectStatus", vscode.StatusBarAlignment.Left)
+	context.subscriptions.push(wuhoh)
+
+	wuhoh.name = "GameMaker Project Status"
+	wuhoh.command = undefined
+	wuhoh.text = "$(sync~spin) GameMaker Project"
+	wuhoh.tooltip = new vscode.MarkdownString("Importing GameMaker Project...")
+	wuhoh.show()
+
+	context.subscriptions.push(vscode.commands.registerCommand("gml-ls.action.reimportProject", () => {
+		wuhoh.text = "$(sync~spin) GameMaker Project"
+		wuhoh.tooltip = new vscode.MarkdownString("Importing GameMaker Project...")
+		wuhoh.show()
+
+		lib.CreateWorkspaceState(context.workspaceState).then(result => {
+			afterImport()
+		});
+	}))
+
+	lib.CreateWorkspaceState(context.workspaceState).then(result => {
+		afterImport()
+
+		// Start the client. This will also launch the server
+		client.start()
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -184,4 +208,19 @@ export function deactivate(): Thenable<void> | undefined {
 function recompile(event: vscode.ConfigurationChangeEvent)
 {
 	gmlGlobals.recompile(true)
+}
+
+export function afterImport()
+{
+	if(lib.yypLocation !== null)
+	{
+		wuhoh.command = undefined
+		wuhoh.hide()
+	}
+	else
+	{
+		wuhoh.text = "$(error) GameMaker Project"
+		wuhoh.tooltip = new vscode.MarkdownString("Import failed - yyp file was not found")
+		wuhoh.command = "gml-ls.action.reimportProject"
+	}
 }

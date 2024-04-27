@@ -158,7 +158,7 @@ export class GmlReferenceProvider implements vscode.ReferenceProvider
 
                 if(!(includeWorkspaceReferences || (includeResourceReferences && resources.has(word)))) return null
 
-                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
 
                 for(const document of documents)
                 {
@@ -231,7 +231,7 @@ export class GmlRenameProvider implements vscode.RenameProvider
         {
             if(tests[i].test(prefix, suffix))
             {
-                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+                const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
 
                 for(const document of documents)
                 {

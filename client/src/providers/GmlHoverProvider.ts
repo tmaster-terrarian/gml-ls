@@ -123,7 +123,7 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
 
         if(includeWorkspaceHovers)
         {
-            const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+            const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
             for(const document of documents)
             {
                 if(!document.uri.path.endsWith(".gml")) continue
@@ -133,9 +133,13 @@ export default class GmlHoverProvider implements vscode.HoverProvider {
                 let macrodef = new RegExp("#macro (" + name + ") ((?:[^\\n](\\\\(\\n|\\r\\n))?)+(?=\\n|$))").exec(text)
                 if(macrodef)
                 {
-                    return new vscode.Hover([
-                        new MarkdownString().appendCodeblock(`#macro ${name}: ${macrodef[2]}`)
-                    ], wordRange)
+                    const contents = []
+
+                    contents.push(new MarkdownString().appendCodeblock(`#macro ${name}: ${macrodef[2]}`))
+                    // if(macrodef[3].length > 2)
+                    //     contents.push(new MarkdownString(`${macrodef[4]}`))
+
+                    return new vscode.Hover(contents, wordRange)
                 }
 
                 let enumdef = new RegExp("\\benum\\s+(" + name + ")\\s*\\{\\s*((\\s*[a-zA-Z_][a-zA-Z0-9_]*(\\s*,)?)+)\\s*\\}").exec(text)

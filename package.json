@@ -318,7 +318,6 @@
 					"*.resource": "#fab1e7"
 				}
 			},
-			"editor.definitionLinkOpensInPeek": false,
 			"files.associations": {
 				"*.yy": "json",
 				"*.yyp": "json"

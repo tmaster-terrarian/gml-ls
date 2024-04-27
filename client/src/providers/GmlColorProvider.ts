@@ -1,7 +1,6 @@
 /* eslint-disable */
 import * as vscode from "vscode";
 import * as gmlGlobals from "./gmlGlobals";
-import GmlProvider from "./GmlProvider";
 
 const TagLiteral = (literal: string): vscode.Color =>
 {
@@ -36,7 +35,7 @@ const parseLiteral = (literal: string): vscode.Color =>
     }
 };
 
-export default class GmlColorProvider implements vscode.DocumentColorProvider, GmlProvider {
+export default class GmlColorProvider implements vscode.DocumentColorProvider {
     async provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.ColorInformation[]>
     {
         if(vscode.workspace.getConfiguration('gml-ls').get('simpleMode', false)) return

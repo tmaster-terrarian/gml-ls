@@ -8,7 +8,9 @@
 		"sourceMap": true,
 		"moduleResolution": "Node",
 		"resolveJsonModule": true,
-		"composite": true
+		"composite": true,
+		"declaration": true,
+		"declarationDir": "out"
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test"],

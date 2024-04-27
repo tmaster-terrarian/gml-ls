@@ -149,7 +149,7 @@ export default class GmlCompletionProvider implements vscode.CompletionItemProvi
                 }
         }
 
-        const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml"))
+        const documents = await lib.getWorkspaceDocuments(await vscode.workspace.findFiles("**/*.gml", "**/datafiles/**"))
 
         if(includeWorkspaceCompletions)
         for(const document of documents)
