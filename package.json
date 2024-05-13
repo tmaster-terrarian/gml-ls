@@ -56,7 +56,6 @@
 					"properties": {
 						"functions": {
 							"type": "object",
-							"default": {},
 							"propertyNames": {
 								"pattern": "\\S+",
 								"patternErrorMessage": "Property should not be empty."
@@ -141,13 +140,13 @@
 										"description": "Function will be marked as deprecated"
 									}
 								},
+								"additionalProperties": false,
 								"required": []
 							},
 							"description": "List of user-defined Script Functions"
 						},
 						"macros": {
 							"type": "object",
-							"default": {},
 							"propertyNames": {
 								"pattern": "\\S+",
 								"patternErrorMessage": "Property should not be empty."
@@ -177,6 +176,7 @@
 										"description": "Constant will be marked as deprecated"
 									}
 								},
+								"additionalProperties": false,
 								"required": []
 							},
 							"description": "List of user-defined Macros"

@@ -334,7 +334,7 @@
       "name": "keyword.operator.word.gml"
     },
     {
-      "match": ",|\\(|\\)|\\{|\\}|\\.",
+      "match": ",|\\.",
       "name": "keyword.other.gml"
     },
     {
