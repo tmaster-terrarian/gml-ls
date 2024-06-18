@@ -1,6 +1,6 @@
 {
 	"name": "gml-ls",
-	"description": "A language provider for GameMaker Studio 2 (LTS and above)",
+	"description": "A language provider for GameMaker (LTS and above)",
 	"publisher": "bscit",
 	"author": {
 		"name": "bscit",
